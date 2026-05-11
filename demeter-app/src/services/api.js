@@ -1,8 +1,9 @@
 import axios from "axios";
+import * as dotenv from 'dotenv';
 
 // 1. Descubra o IP da sua máquina (ex: 192.168.1.10)
 // Não use "localhost", o celular não entende o que é localhost!
-const meuIP = "192.168.0.106";
+const meuIP = process.env.USER_IP;
 
 const api = axios.create({
   baseURL: `http://${meuIP}:8000/api`,
