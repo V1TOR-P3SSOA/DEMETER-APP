@@ -13,6 +13,7 @@ class SemanaGestacional extends Model
         'semana_gestacional',
         'trimestre',
         'tamanho_feto',
+        'imagem_url',
         'peso_estimado_gramas',
         'tamanho_estimado_cm',
         'desenvolvimento_feto',
