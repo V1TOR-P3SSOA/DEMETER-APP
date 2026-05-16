@@ -16,7 +16,7 @@ class FormularioController extends Controller
             'idade'                  => 'required|integer|min:1|max:120',
             'semanas_gestacao'       => 'required|integer|min:1|max:45',
             'primeira_gestacao'      => 'required',
-            'tipo_gestacao'          => 'required|in:unica,gemelar,Única,Gemelar',
+            'tipo_gestacao'          => 'required|string',
             'altura'                 => 'required|numeric|min:100|max:250',
             'peso'                   => 'required|numeric|min:30|max:300',
             'objetivos'              => 'nullable|array',
@@ -33,8 +33,12 @@ class FormularioController extends Controller
         $validated['acompanhamento_medico'] = filter_var($validated['acompanhamento_medico'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
             ?? ($validated['acompanhamento_medico'] === 'Sim');
 
-        // Normaliza tipo_gestacao para lowercase
-        $validated['tipo_gestacao'] = strtolower($validated['tipo_gestacao']);
+        // Normaliza tipo_gestacao para os valores esperados pelo banco
+        $validated['tipo_gestacao'] = match (strtolower(trim($validated['tipo_gestacao']))) {
+            'única', 'unica' => 'unica',
+            'gemelar'        => 'gemelar',
+            default          => strtolower(trim($validated['tipo_gestacao'])),
+        };
 
         $formulario = Formulario::updateOrCreate(
             ['user_id' => $request->user()->id],

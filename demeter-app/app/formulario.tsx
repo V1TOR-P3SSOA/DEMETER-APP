@@ -16,6 +16,7 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -158,11 +159,14 @@ export default function FormularioScreen() {
 
     setLoading(true);
     try {
+      const token = await AsyncStorage.getItem("auth_token"); // busca o token salvo
+
       const response = await fetch(`${API_URL}/api/formulario`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+          Authorization: `Bearer ${token}`, // envia o token
         },
         body: JSON.stringify({
           idade,
