@@ -35,15 +35,18 @@ async function registerRequest(name: string, email: string, password: string) {
     }),
   });
 
-  if (!response.ok) {
-    const data = await response.json();
-    const firstError = data.errors
-      ? Object.values(data.errors).flat()[0]
-      : data.message || "Erro ao cadastrar.";
-    throw new Error(firstError);
+  // Breeze retorna 201 ou 204 sem corpo em caso de sucesso
+  if (response.ok) {
+    return true;
   }
 
-  return response.json();
+  // Só tenta fazer parse do JSON se der erro
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : {};
+  const firstError = data.errors
+    ? Object.values(data.errors).flat()[0]
+    : data.message || "Erro ao cadastrar.";
+  throw new Error(firstError as string);
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
