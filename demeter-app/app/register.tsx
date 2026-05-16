@@ -1,4 +1,4 @@
-// app/register.jsx
+// app/register.tsx
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -16,9 +16,10 @@ import {
   ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // ─── Configuração da API ──────────────────────────────────────────────────────
-const API_URL = process.env.EXPO_PUBLIC_API_URL; // ← ALTERE para o seu IP local
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 async function registerRequest(name: string, email: string, password: string) {
   const response = await fetch(`${API_URL}/api/register`, {
@@ -35,12 +36,12 @@ async function registerRequest(name: string, email: string, password: string) {
     }),
   });
 
-  // Breeze retorna 201 ou 204 sem corpo em caso de sucesso
   if (response.ok) {
-    return true;
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : {};
+    return data.token ?? null; // retorna o token
   }
 
-  // Só tenta fazer parse do JSON se der erro
   const text = await response.text();
   const data = text ? JSON.parse(text) : {};
   const firstError = data.errors
@@ -83,12 +84,15 @@ export default function RegisterScreen() {
     }
     setLoading(true);
     try {
-        await registerRequest(name.trim(), email.trim(), password);
-        router.replace("/formulario" as any);
+      const token = await registerRequest(name.trim(), email.trim(), password);
+      if (token) {
+        await AsyncStorage.setItem("auth_token", token); // salva o token
+      }
+      router.replace("/formulario" as any);
     } catch (err: any) {
-        Alert.alert("Erro ao cadastrar", err.message);
+      Alert.alert("Erro ao cadastrar", err.message);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
