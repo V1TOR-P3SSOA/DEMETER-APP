@@ -21,12 +21,7 @@ import { useRouter } from "expo-router";
 const API_URL = process.env.EXPO_PUBLIC_API_URL; // ← ALTERE para o seu IP local
 
 async function registerRequest(name: string, email: string, password: string) {
-  await fetch(`${API_URL}/sanctum/csrf-cookie`, {
-    method: "GET",
-    credentials: "include",
-  });
-
-  const response = await fetch(`${API_URL}/register`, {
+  const response = await fetch(`${API_URL}/api/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -38,7 +33,6 @@ async function registerRequest(name: string, email: string, password: string) {
       password,
       password_confirmation: password,
     }),
-    credentials: "include",
   });
 
   if (!response.ok) {

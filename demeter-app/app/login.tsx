@@ -27,19 +27,13 @@ const { width } = Dimensions.get("window");
 const API_URL = process.env.EXPO_PUBLIC_API_URL; // ← ALTERE AQUI
 
 async function loginRequest(email: string, password: string) {
-  await fetch(`${API_URL}/sanctum/csrf-cookie`, {
-    method: "GET",
-    credentials: "include",
-  });
-
-  const response = await fetch(`${API_URL}/login`, {
+  const response = await fetch(`${API_URL}/api/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
     body: JSON.stringify({ email, password }),
-    credentials: "include",
   });
 
   if (!response.ok) {

@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\SemanaGestacionalController;
 use Illuminate\Support\Facades\Route;
 
+Route::post('/register', [\App\Http\Controllers\Auth\RegisteredUserController::class, 'store']);
+Route::post('/login', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'store']);
 
 Route::prefix('semanas-gestacionais')->name('semanas-gestacionais.')->group(function () {
 
