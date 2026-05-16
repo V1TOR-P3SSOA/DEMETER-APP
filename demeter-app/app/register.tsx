@@ -83,14 +83,12 @@ export default function RegisterScreen() {
     }
     setLoading(true);
     try {
-      await registerRequest(name.trim(), email.trim(), password);
-      Alert.alert("Conta criada!", "Você já pode fazer login.", [
-        { text: "OK", onPress: () => router.replace("/login" as any) },
-      ]);
-   } catch (err: any) {
-      Alert.alert("Erro ao cadastrar", err.message);
+        await registerRequest(name.trim(), email.trim(), password);
+        router.replace("/formulario" as any);
+    } catch (err: any) {
+        Alert.alert("Erro ao cadastrar", err.message);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 

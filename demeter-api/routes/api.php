@@ -2,6 +2,12 @@
 
 use App\Http\Controllers\Api\SemanaGestacionalController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\FormularioController;
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/formulario', [FormularioController::class, 'store']);
+    Route::get('/formulario', [FormularioController::class, 'show']);
+});
 
 Route::post('/register', [\App\Http\Controllers\Auth\RegisteredUserController::class, 'store']);
 Route::post('/login', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'store']);
