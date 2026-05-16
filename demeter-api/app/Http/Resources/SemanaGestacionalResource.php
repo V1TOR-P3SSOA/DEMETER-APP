@@ -17,6 +17,7 @@ class SemanaGestacionalResource extends JsonResource
             // Informações do feto
             'feto' => [
                 'tamanho_comparativo' => $this->tamanho_feto,
+                'imagem_url'          => $this->imagem_url,
                 'peso_estimado_gramas' => $this->peso_estimado_gramas,
                 'tamanho_estimado_cm'  => $this->tamanho_estimado_cm,
                 'desenvolvimento'      => $this->desenvolvimento_feto,
