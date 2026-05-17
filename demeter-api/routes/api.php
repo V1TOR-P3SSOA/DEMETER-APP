@@ -8,6 +8,12 @@ use App\Http\Controllers\Api\ReceitaApiController;
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/formulario', [FormularioController::class, 'store']);
     Route::get('/formulario', [FormularioController::class, 'show']);
+
+     Route::prefix('receitas')->name('api.receitas.')->group(function () {
+        Route::get('/',          [ReceitaApiController::class, 'index']);
+        Route::get('/tags',      [ReceitaApiController::class, 'tags']);
+        Route::get('/{receita}', [ReceitaApiController::class, 'show']);
+    });
 });
 
 Route::post('/register', [\App\Http\Controllers\Auth\RegisteredUserController::class, 'store']);
