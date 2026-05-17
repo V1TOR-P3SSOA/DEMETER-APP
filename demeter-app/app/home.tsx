@@ -7,12 +7,15 @@ import {
   Text,
   StatusBar,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function HomeIcon() {
   return <Text style={styles.navIcon}>⌂</Text>;
 }
 
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets(); // pega as margens seguras do dispositivo
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8d7da" />
@@ -21,7 +24,7 @@ export default function HomeScreen() {
       <View style={styles.body} />
 
       {/* Navbar inferior */}
-      <View style={styles.navbar}>
+      <View style={[styles.navbar, { marginBottom: insets.bottom + 12 }]}>
         <TouchableOpacity style={styles.navItem}>
           <HomeIcon />
         </TouchableOpacity>
@@ -51,7 +54,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: "#f0ead8",
     marginHorizontal: 20,
-    marginBottom: 24,
     borderRadius: 30,
     paddingVertical: 12,
     paddingHorizontal: 10,

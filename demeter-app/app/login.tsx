@@ -1,4 +1,4 @@
-// app/login.jsx
+// app/login.tsx
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -17,14 +17,12 @@ import {
   ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 
 // ─── Configuração da API ──────────────────────────────────────────────────────
-// Troque pelo IP local da sua máquina (ex: 192.168.1.10) ao usar Expo Go físico
-// Para emulador Android: http://10.0.2.2:8000
-// Para iOS Simulator:   http://localhost:8000
-const API_URL = process.env.EXPO_PUBLIC_API_URL; // ← ALTERE AQUI
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 async function loginRequest(email: string, password: string) {
   const response = await fetch(`${API_URL}/api/login`, {
@@ -41,7 +39,7 @@ async function loginRequest(email: string, password: string) {
     throw new Error(data.message || "Credenciais inválidas.");
   }
 
-  return response.json();
+  return response.json(); // retorna { token, tem_formulario }
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -77,8 +75,17 @@ export default function LoginScreen() {
     }
     setLoading(true);
     try {
-      await loginRequest(email.trim(), password);
-      router.replace("/home" as any); // troque pela sua rota principal quando criar
+      const data = await loginRequest(email.trim(), password);
+
+      // Salva o token
+      await AsyncStorage.setItem("auth_token", data.token);
+
+      // Redireciona conforme se já tem formulário preenchido
+      if (data.tem_formulario) {
+        router.replace("/home" as any);
+      } else {
+        router.replace("/formulario" as any);
+      }
     } catch (err: any) {
       Alert.alert("Erro ao entrar", err.message);
     } finally {
