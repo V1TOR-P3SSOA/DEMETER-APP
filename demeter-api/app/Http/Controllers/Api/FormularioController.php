@@ -13,7 +13,7 @@ class FormularioController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $this->validate($request, [
-            'idade'                  => 'required|integer|min:1|max:120',
+            'idade'                  => 'required|integer|min:10|max:55',
             'semanas_gestacao'       => 'required|integer|min:4|max:45',
             'primeira_gestacao'      => 'required',
             'tipo_gestacao'          => 'required|string',
@@ -28,8 +28,8 @@ class FormularioController extends Controller
         ], [
             'idade.required'             => 'Informe sua idade.',
             'idade.integer'              => 'A idade deve ser um número inteiro.',
-            'idade.min'                  => 'A idade mínima é 1 ano.',
-            'idade.max'                  => 'A idade máxima permitida é 120 anos.',
+            'idade.min'                  => 'A idade mínima é 10 anos.',
+            'idade.max'                  => 'A idade máxima permitida é 55 anos.',
 
             'semanas_gestacao.required'  => 'Informe quantas semanas de gestação você está.',
             'semanas_gestacao.integer'   => 'As semanas devem ser um número inteiro.',
