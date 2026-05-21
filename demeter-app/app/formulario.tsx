@@ -9,7 +9,7 @@ import {
   ScrollView,
   Animated,
   StatusBar,
-  Alert,
+  Modal,
   ActivityIndicator,
   Image,
   Platform,
@@ -213,6 +213,144 @@ const sl = StyleSheet.create({
 });
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─── Modal de alerta customizado ─────────────────────────────────────────────
+function CustomAlert({
+  visible,
+  title,
+  messages,
+  onClose,
+}: {
+  visible: boolean;
+  title: string;
+  messages: string[];
+  onClose: () => void;
+}) {
+  const scaleAnim = useRef(new Animated.Value(0.85)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          damping: 14,
+          stiffness: 200,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      scaleAnim.setValue(0.85);
+      opacityAnim.setValue(0);
+    }
+  }, [visible]);
+
+  const isError = title.toLowerCase().includes("erro");
+
+  return (
+    <Modal transparent visible={visible} animationType="none" onRequestClose={onClose}>
+      <View style={al.overlay}>
+        <Animated.View
+          style={[al.box, { opacity: opacityAnim, transform: [{ scale: scaleAnim }] }]}
+        >
+          {/* Ícone */}
+          <View style={[al.iconCircle, isError ? al.iconCircleError : al.iconCircleWarn]}>
+            <Text style={al.iconText}>{isError ? "✕" : "!"}</Text>
+          </View>
+
+          <Text style={al.title}>{title}</Text>
+
+          {messages.map((msg, i) => (
+            <Text key={i} style={al.message}>
+              {msg}
+            </Text>
+          ))}
+
+          <TouchableOpacity style={al.btn} onPress={onClose} activeOpacity={0.8}>
+            <Text style={al.btnText}>Entendi</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+}
+
+const al = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(58, 26, 34, 0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+  },
+  box: {
+    backgroundColor: "#fdf6f0",
+    borderRadius: 20,
+    padding: 28,
+    width: "100%",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "#e8c8d0",
+    shadowColor: "#3a1a22",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  iconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+  },
+  iconCircleError: {
+    backgroundColor: "#b5405a",
+  },
+  iconCircleWarn: {
+    backgroundColor: "#c97a40",
+  },
+  iconText: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "700",
+  },
+  title: {
+    fontSize: 18,
+    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+    fontWeight: "700",
+    color: "#b5405a",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  message: {
+    fontSize: 14,
+    color: "#3a1a22",
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 6,
+  },
+  btn: {
+    marginTop: 18,
+    backgroundColor: "#b5405a",
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+  },
+  btnText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: 0.3,
+  },
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ─── Tela principal ───────────────────────────────────────────────────────────
 export default function FormularioScreen() {
   const router = useRouter();
@@ -231,6 +369,11 @@ export default function FormularioScreen() {
   const [doencas, setDoencas] = useState("");
   const [acompanhamento, setAcompanhamento] = useState("");
   const [loading, setLoading] = useState(false);
+  const [alertInfo, setAlertInfo] = useState<{ title: string; messages: string[] } | null>(null);
+
+  const showAlert = (title: string, messages: string[]) =>
+    setAlertInfo({ title, messages });
+  const closeAlert = () => setAlertInfo(null);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -242,7 +385,7 @@ export default function FormularioScreen() {
 
   const handleSubmit = async () => {
     if (!idade || !semanas || !primeiraGestacao || !tipoGestacao || !altura || !peso) {
-      Alert.alert("Atenção", "Preencha todos os campos obrigatórios.");
+      showAlert("Atenção", ["Preencha todos os campos obrigatórios."]);
       return;
     }
 
@@ -276,12 +419,22 @@ export default function FormularioScreen() {
       if (!response.ok) {
         const text = await response.text();
         const data = text ? JSON.parse(text) : {};
-        throw new Error(data.message || "Erro ao salvar formulário.");
+
+        // Laravel retorna erros de validação em data.errors (objeto de arrays)
+        if (data.errors && typeof data.errors === "object") {
+          const messages = Object.values(data.errors)
+            .flat()
+            .map((msg) => String(msg));
+          showAlert("Erro de validação", messages);
+        } else {
+          showAlert("Erro", [data.message || "Erro ao salvar formulário."]);
+        }
+        return;
       }
 
       router.replace("/home" as any);
     } catch (err: any) {
-      Alert.alert("Erro", err.message);
+      showAlert("Erro", [err.message || "Ocorreu um erro inesperado."]);
     } finally {
       setLoading(false);
     }
@@ -293,6 +446,13 @@ export default function FormularioScreen() {
       behavior="padding"
     >
       <StatusBar barStyle="dark-content" backgroundColor="#f8d7da" />
+
+      <CustomAlert
+        visible={!!alertInfo}
+        title={alertInfo?.title ?? ""}
+        messages={alertInfo?.messages ?? []}
+        onClose={closeAlert}
+      />
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingBottom: 300 }]}
         showsVerticalScrollIndicator={false}
