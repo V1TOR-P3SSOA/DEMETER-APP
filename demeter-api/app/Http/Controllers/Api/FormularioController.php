@@ -12,7 +12,7 @@ class FormularioController extends Controller
     // Salva o formulário do usuário autenticado
     public function store(Request $request): JsonResponse
     {
-        $this->validate($request, [
+        $validated = $this->validate($request, [
             'idade'                  => 'required|integer|min:1|max:120',
             'semanas_gestacao'       => 'required|integer|min:4|max:45',
             'primeira_gestacao'      => 'required',
@@ -26,7 +26,6 @@ class FormularioController extends Controller
             'doencas'                => 'nullable|string|max:500',
             'acompanhamento_medico'  => 'nullable',
         ], [
-            // ─── Mensagens por campo.regra ────────────────────────────────
             'idade.required'             => 'Informe sua idade.',
             'idade.integer'              => 'A idade deve ser um número inteiro.',
             'idade.min'                  => 'A idade mínima é 1 ano.',
