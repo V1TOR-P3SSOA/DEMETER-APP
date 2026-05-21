@@ -12,7 +12,7 @@ class FormularioController extends Controller
     // Salva o formulário do usuário autenticado
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $this->validate($request, [
             'idade'                  => 'required|integer|min:1|max:120',
             'semanas_gestacao'       => 'required|integer|min:4|max:45',
             'primeira_gestacao'      => 'required',
@@ -25,6 +25,35 @@ class FormularioController extends Controller
             'suplementos'            => 'nullable|string|max:500',
             'doencas'                => 'nullable|string|max:500',
             'acompanhamento_medico'  => 'nullable',
+        ], [
+            // ─── Mensagens por campo.regra ────────────────────────────────
+            'idade.required'             => 'Informe sua idade.',
+            'idade.integer'              => 'A idade deve ser um número inteiro.',
+            'idade.min'                  => 'A idade mínima é 1 ano.',
+            'idade.max'                  => 'A idade máxima permitida é 120 anos.',
+
+            'semanas_gestacao.required'  => 'Informe quantas semanas de gestação você está.',
+            'semanas_gestacao.integer'   => 'As semanas devem ser um número inteiro.',
+            'semanas_gestacao.min'       => 'O mínimo de semanas é 4.',
+            'semanas_gestacao.max'       => 'O máximo de semanas é 45.',
+
+            'primeira_gestacao.required' => 'Informe se é sua primeira gestação.',
+
+            'tipo_gestacao.required'     => 'Informe o tipo de gestação.',
+            'tipo_gestacao.string'       => 'O tipo de gestação é inválido.',
+
+            'altura.required'            => 'Informe sua altura.',
+            'altura.numeric'             => 'A altura deve ser um número.',
+            'altura.min'                 => 'A altura mínima é 100 cm.',
+            'altura.max'                 => 'A altura máxima é 250 cm.',
+
+            'peso.required'              => 'Informe seu peso.',
+            'peso.numeric'               => 'O peso deve ser um número.',
+            'peso.min'                   => 'O peso mínimo é 30 kg.',
+            'peso.max'                   => 'O peso máximo é 300 kg.',
+
+            'suplementos.max'            => 'O campo suplementos pode ter no máximo 500 caracteres.',
+            'doencas.max'                => 'O campo doenças pode ter no máximo 500 caracteres.',
         ]);
 
         // Normaliza booleanos vindos como string do app
