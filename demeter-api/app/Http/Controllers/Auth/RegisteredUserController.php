@@ -22,14 +22,25 @@ class RegisteredUserController extends Controller
     public function store(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'name.required'     => 'Informe seu nome.',
+            'name.max'          => 'O nome pode ter no máximo 255 caracteres.',
+
+            'email.required'    => 'Informe seu e-mail.',
+            'email.email'       => 'Informe um e-mail válido.',
+            'email.max'         => 'O e-mail pode ter no máximo 255 caracteres.',
+            'email.unique'      => 'Este e-mail já está cadastrado.',
+
+            'password.required'  => 'Informe uma senha.',
+            'password.confirmed' => 'As senhas não coincidem.',
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name'     => $request->name,
+            'email'    => $request->email,
             'password' => Hash::make($request->string('password')),
         ]);
 
@@ -37,7 +48,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        // Gera o token Sanctum e retorna para o app salvar
         $token = $user->createToken('app')->plainTextToken;
 
         return response()->json(['token' => $token], 201);
