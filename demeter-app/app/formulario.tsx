@@ -124,6 +124,95 @@ const cb = StyleSheet.create({
   },
 });
 
+// ─── Componente de select ─────────────────────────────────────────────────────
+function SelectGroup({
+  options,
+  selected,
+  onChange,
+}: {
+  options: string[];
+  selected: string;
+  onChange: (val: string) => void;
+}) {
+  return (
+    <View style={sl.wrap}>
+      {options.map((item) => {
+        const active = selected === item;
+        return (
+          <TouchableOpacity
+            key={item}
+            style={[sl.option, active && sl.optionActive]}
+            onPress={() => onChange(item)}
+            activeOpacity={0.7}
+          >
+            <View style={[sl.radio, active && sl.radioActive]}>
+              {active && <View style={sl.radioDot} />}
+            </View>
+            <Text style={[sl.label, active && sl.labelActive]}>{item}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+const sl = StyleSheet.create({
+  wrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  option: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: "#d4a0aa",
+    backgroundColor: "#fff8f5",
+    flex: 1,
+    minWidth: 100,
+  },
+  optionActive: {
+    backgroundColor: "#b5405a",
+    borderColor: "#b5405a",
+  },
+  radio: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    borderColor: "#d4a0aa",
+    backgroundColor: "#fdf6f0",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
+  radioActive: {
+    borderColor: "#fff",
+    backgroundColor: "transparent",
+  },
+  radioDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#fff",
+  },
+  label: {
+    fontSize: 14,
+    color: "#3a1a22",
+    fontWeight: "500",
+  },
+  labelActive: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ─── Tela principal ───────────────────────────────────────────────────────────
 export default function FormularioScreen() {
   const router = useRouter();
@@ -159,14 +248,14 @@ export default function FormularioScreen() {
 
     setLoading(true);
     try {
-      const token = await AsyncStorage.getItem("auth_token"); // busca o token salvo
+      const token = await AsyncStorage.getItem("auth_token");
 
       const response = await fetch(`${API_URL}/api/formulario`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          Authorization: `Bearer ${token}`, // envia o token
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           idade,
@@ -253,27 +342,23 @@ export default function FormularioScreen() {
             />
           </View>
 
-          {/* Pergunta 3 */}
+          {/* Pergunta 3 — Select: Sim / Não */}
           <View style={styles.card}>
             <Text style={styles.label}>Essa é sua primeira gestação?</Text>
-            <TextInput
-              style={styles.input}
-              value={primeiraGestacao}
-              onChangeText={setPrimeiraGestacao}
-              placeholder="Sim ou Não"
-              placeholderTextColor="#c8a0a8"
+            <SelectGroup
+              options={["Sim", "Não"]}
+              selected={primeiraGestacao}
+              onChange={setPrimeiraGestacao}
             />
           </View>
 
-          {/* Pergunta 4 */}
+          {/* Pergunta 4 — Select: Única / Gemelar */}
           <View style={styles.card}>
             <Text style={styles.label}>Gestação única ou gemelar?</Text>
-            <TextInput
-              style={styles.input}
-              value={tipoGestacao}
-              onChangeText={setTipoGestacao}
-              placeholder="Única ou Gemelar"
-              placeholderTextColor="#c8a0a8"
+            <SelectGroup
+              options={["Única", "Gemelar"]}
+              selected={tipoGestacao}
+              onChange={setTipoGestacao}
             />
           </View>
 
@@ -355,15 +440,13 @@ export default function FormularioScreen() {
             />
           </View>
 
-          {/* Pergunta 11 */}
+          {/* Pergunta 11 — Select: Sim / Não */}
           <View style={styles.card}>
             <Text style={styles.label}>Tem acompanhamento médico ou nutricional?</Text>
-            <TextInput
-              style={styles.input}
-              value={acompanhamento}
-              onChangeText={setAcompanhamento}
-              placeholder="Sim ou Não"
-              placeholderTextColor="#c8a0a8"
+            <SelectGroup
+              options={["Sim", "Não"]}
+              selected={acompanhamento}
+              onChange={setAcompanhamento}
             />
           </View>
 
