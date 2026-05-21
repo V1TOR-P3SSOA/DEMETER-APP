@@ -11,48 +11,40 @@ use Illuminate\Http\Request;
 class ReceitaApiController extends Controller
 {
     /**
-     * Retorna receitas filtradas pelas tags enviadas pelo app.
+     * Retorna receitas ordenadas, aceitando filtros por tag e busca textual.
+     * Mantém a estrutura de resposta com 'data' e 'total' para não quebrar o App.
      *
-     * Qualquer combinação de filtros pode ser enviada via query string:
-     *   GET /api/receitas?tempo=segundo+trimestre&tipos_refeicoes=lanche
-     *
-     * Campos filtráveis (todos opcionais):
-     *   - tempo
-     *   - nutrientes_principais
-     *   - sintomas_gestacao
-     *   - restricoes_alimentares
-     *   - tipos_refeicoes
-     *   - tempo_preparo
-     *   - objetivo_nutricional
-     *
-     * Também aceita busca por nome:
-     *   GET /api/receitas?search=salada
+     * GET /api/receitas
+     * GET /api/receitas?search=salada
+     * GET /api/receitas?tempo=segundo+trimestre&tipos_refeicoes=lanche
      */
     public function index(Request $request): JsonResponse
     {
         $query = Receita::query();
 
-        // Busca textual pelo nome da receita
+        // 1. Busca textual pelo nome da receita (Funcionalidade do arquivo 1)
         if ($request->filled('search')) {
             $query->where('nome', 'like', '%' . $request->search . '%');
         }
 
-        // Filtros por tag (enum). Apenas campos válidos são aplicados.
+        // 2. Filtros dinâmicos por tag/enum (Funcionalidade do arquivo 1)
         $tagFields = array_keys(ReceitaController::$enums);
 
         foreach ($tagFields as $field) {
             if ($request->filled($field)) {
                 $value = $request->input($field);
 
-                // Valida se o valor é uma opção permitida antes de filtrar
+                // Valida se o valor enviado é uma opção permitida no enum
                 if (in_array($value, ReceitaController::$enums[$field])) {
                     $query->where($field, $value);
                 }
             }
         }
 
+        // 3. Ordenação e execução da query (Presente em ambos)
         $receitas = $query->orderBy('nome')->get();
 
+        // Retorna o padrão estruturado (Evita que o FlutterFlow pare de ler os dados)
         return response()->json([
             'data'  => $receitas,
             'total' => $receitas->count(),
@@ -63,7 +55,7 @@ class ReceitaApiController extends Controller
      * Retorna os valores disponíveis de todas as tags.
      * Útil para o app montar os chips/filtros dinamicamente.
      *
-     *   GET /api/receitas/tags
+     * GET /api/receitas/tags
      */
     public function tags(): JsonResponse
     {
@@ -73,9 +65,9 @@ class ReceitaApiController extends Controller
     }
 
     /**
-     * Retorna os detalhes completos de uma receita.
+     * Retorna os detalhes completos de uma única receita.
      *
-     *   GET /api/receitas/{id}
+     * GET /api/receitas/{id}
      */
     public function show(Receita $receita): JsonResponse
     {

@@ -7,35 +7,41 @@ import {
   Text,
   StatusBar,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-function HomeIcon() {
-  return <Text style={styles.navIcon}>⌂</Text>;
-}
+import { useRouter } from "expo-router";
 
 export default function HomeScreen() {
-  const insets = useSafeAreaInsets(); // pega as margens seguras do dispositivo
+  const router = useRouter();
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8d7da" />
 
-      {/* Conteúdo principal vazio por enquanto */}
+      {/* Conteúdo principal — a ser preenchido */}
       <View style={styles.body} />
 
       {/* Navbar inferior */}
-      <View style={[styles.navbar, { marginBottom: insets.bottom + 12 }]}>
+      <View style={styles.navbar}>
+        {/* 1. Home */}
         <TouchableOpacity style={styles.navItem}>
-          <HomeIcon />
+          <Text style={styles.navIcon}>⌂</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <HomeIcon />
+
+        {/* 2. Receitas */}
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => router.push("/receitas" as any)}
+        >
+          <Text style={styles.navIcon}>🍽️</Text>
         </TouchableOpacity>
+
+        {/* 3. Placeholder */}
         <TouchableOpacity style={styles.navItem}>
-          <HomeIcon />
+          <Text style={styles.navIcon}>⌂</Text>
         </TouchableOpacity>
+
+        {/* 4. Placeholder */}
         <TouchableOpacity style={styles.navItem}>
-          <HomeIcon />
+          <Text style={styles.navIcon}>⌂</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -54,6 +60,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: "#f0ead8",
     marginHorizontal: 20,
+    marginBottom: 24,
     borderRadius: 30,
     paddingVertical: 12,
     paddingHorizontal: 10,
