@@ -14,7 +14,7 @@ class FormularioController extends Controller
     {
         $validated = $request->validate([
             'idade'                  => 'required|integer|min:1|max:120',
-            'semanas_gestacao'       => 'required|integer|min:1|max:45',
+            'semanas_gestacao'       => 'required|integer|min:4|max:45',
             'primeira_gestacao'      => 'required',
             'tipo_gestacao'          => 'required|string',
             'altura'                 => 'required|numeric|min:100|max:250',
