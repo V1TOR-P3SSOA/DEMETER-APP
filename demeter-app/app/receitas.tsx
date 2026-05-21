@@ -15,6 +15,7 @@ import {
   Platform,
   Dimensions,
 } from "react-native";
+import { useRouter } from "expo-router"; // Importado para gerenciar a navegação
 
 const { width } = Dimensions.get("window");
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -235,6 +236,7 @@ const modal = StyleSheet.create({
 
 // ─── Tela principal ───────────────────────────────────────────────────────────
 export default function ReceitasScreen() {
+  const router = useRouter(); // Inicializado o roteador
   const [receitas, setReceitas] = useState<Receita[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Receita | null>(null);
@@ -251,7 +253,6 @@ export default function ReceitasScreen() {
       });
       if (!response.ok) throw new Error("Erro ao carregar receitas.");
       const data = await response.json();
-      // Aceita tanto { data: [...] } (paginado) quanto array direto
       setReceitas(Array.isArray(data) ? data : data.data ?? []);
     } catch (err: any) {
       Alert.alert("Erro", err.message);
@@ -298,6 +299,32 @@ export default function ReceitasScreen() {
         />
       )}
 
+      {/* Navbar inferior inserida na tela de receitas */}
+      <View style={styles.navbar}>
+        {/* 1. Home (Redireciona de volta para a Home) */}
+        <TouchableOpacity 
+          style={styles.navItem}
+          onPress={() => router.push("/home" as any)}
+        >
+          <Text style={styles.navIcon}>⌂</Text>
+        </TouchableOpacity>
+
+        {/* 2. Receitas (Aba ativa atual) */}
+        <TouchableOpacity style={styles.navItem}>
+          <Text style={styles.navIcon}>🍽️</Text>
+        </TouchableOpacity>
+
+        {/* 3. Placeholder */}
+        <TouchableOpacity style={styles.navItem}>
+          <Text style={styles.navIcon}>⌂</Text>
+        </TouchableOpacity>
+
+        {/* 4. Placeholder */}
+        <TouchableOpacity style={styles.navItem}>
+          <Text style={styles.navIcon}>⌂</Text>
+        </TouchableOpacity>
+      </View>
+
       <ReceitaModal receita={selected} visible={modalVisible} onClose={closeModal} />
     </View>
   );
@@ -326,7 +353,7 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: 16,
-    paddingBottom: 24,
+    paddingBottom: 110, // Aumentado para os cards finais não ficarem por trás da navbar
   },
   empty: {
     flex: 1,
@@ -382,5 +409,34 @@ const styles = StyleSheet.create({
   tagsWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
+  },
+
+  // Estilos da Navbar (Unificados do arquivo home)
+  navbar: {
+    position: "absolute", // Fixa a barra flutuando na parte inferior
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    backgroundColor: "#f0ead8",
+    marginHorizontal: 20,
+    marginBottom: 24,
+    borderRadius: 30,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    shadowColor: "#b5405a",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  navItem: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  navIcon: {
+    fontSize: 24,
+    color: "#6b7c5c",
   },
 });
