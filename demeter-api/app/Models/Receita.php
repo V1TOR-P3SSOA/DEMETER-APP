@@ -16,6 +16,7 @@ class Receita extends Model
         'tempo_preparo',
         'objetivo_nutricional',
         'ingredientes',
-        'modo_preparo'
+        'modo_preparo',
+        'foto_url',
     ];
 }
