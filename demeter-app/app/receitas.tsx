@@ -44,7 +44,7 @@ type Receita = {
   objetivo_nutricional: string;
   ingredientes: string;
   modo_preparo: string;
-  foto?: string;
+  foto_url?: string;
 };
 
 // Componente de tag colorida
@@ -92,8 +92,8 @@ function ReceitaCard({ receita, onPress }: { receita: Receita; onPress: () => vo
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
       {/* Foto */}
       <View style={styles.cardImageWrap}>
-        {receita.foto ? (
-          <Image source={{ uri: receita.foto }} style={styles.cardImage} resizeMode="cover" />
+        {receita.foto_url ? (
+          <Image source={{ uri: receita.foto_url }} style={styles.cardImage} resizeMode="cover" />
         ) : (
           <View style={styles.cardImagePlaceholder}>
             <Text style={styles.cardImagePlaceholderText}>🍽️</Text>
@@ -128,8 +128,8 @@ function ReceitaModal({
           <ScrollView showsVerticalScrollIndicator={false}>
             {/* Foto */}
             <View style={modal.imageWrap}>
-              {receita.foto ? (
-                <Image source={{ uri: receita.foto }} style={modal.image} resizeMode="cover" />
+              {receita.foto_url ? (
+                <Image source={{ uri: receita.foto_url }} style={modal.image} resizeMode="cover" />
               ) : (
                 <View style={modal.imagePlaceholder}>
                   <Text style={modal.imagePlaceholderText}>🍽️</Text>
