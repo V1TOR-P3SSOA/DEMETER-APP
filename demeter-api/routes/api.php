@@ -16,17 +16,20 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
+Route::middleware('auth:sanctum')->prefix('admin/receitas')->group(function () {
+    Route::post('/',             [ReceitaApiController::class, 'store']);
+    Route::put('/{receita}',     [ReceitaApiController::class, 'update']);
+    Route::delete('/{receita}',  [ReceitaApiController::class, 'destroy']);
+});
+
 Route::post('/register', [\App\Http\Controllers\Api\AuthController::class, 'register']);
 Route::post('/login',    [\App\Http\Controllers\Api\AuthController::class, 'login']);
 Route::post('/logout',   [\App\Http\Controllers\Api\AuthController::class, 'logout']);
 
 Route::prefix('receitas')->name('api.receitas.')->group(function () {
-    Route::get('/',          [ReceitaApiController::class, 'index'])
-        ->name('index');
-    Route::get('/tags',      [ReceitaApiController::class, 'tags'])
-        ->name('tags');
-    Route::get('/{receita}', [ReceitaApiController::class, 'show'])
-        ->name('show');
+    Route::get('/',          [ReceitaApiController::class, 'index'])->name('index');
+    Route::get('/tags',      [ReceitaApiController::class, 'tags'])->name('tags');
+    Route::get('/{receita}', [ReceitaApiController::class, 'show'])->name('show');
 });
 
 Route::prefix('semanas-gestacionais')->name('semanas-gestacionais.')->group(function () {
