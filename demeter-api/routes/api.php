@@ -4,10 +4,13 @@ use App\Http\Controllers\Api\SemanaGestacionalController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\FormularioController;
 use App\Http\Controllers\Api\ReceitaApiController;
+use App\Http\Controllers\Api\MaeInfoController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/formulario', [FormularioController::class, 'store']);
     Route::get('/formulario', [FormularioController::class, 'show']);
+
+    Route::get('/mae/info', [MaeInfoController::class, 'show']);
 
      Route::prefix('receitas')->name('api.receitas.')->group(function () {
         Route::get('/',          [ReceitaApiController::class, 'index']);
