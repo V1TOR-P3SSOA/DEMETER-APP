@@ -40,9 +40,12 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         {/* 4. Placeholder */}
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>⌂</Text>
-        </TouchableOpacity>
+<TouchableOpacity
+  style={styles.navItem}
+  onPress={() => router.push("/maeinfo" as any)}
+>
+  <Text style={styles.navIcon}>👤</Text>
+</TouchableOpacity>
       </View>
     </View>
   );
