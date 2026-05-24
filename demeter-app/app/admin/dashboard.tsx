@@ -22,6 +22,9 @@ export default function AdminScreen() {
       <TouchableOpacity style={styles.btn} onPress={() => router.push("/admin/create_receita" as any)}>
         <Text style={styles.btnText}>+ Nova Receita</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.btn} onPress={() => router.push("/admin/create_artigo" as any)}>
+        <Text style={styles.btnText}>+ Novo Artigo</Text>
+      </TouchableOpacity>
     </View>
   );
 }
