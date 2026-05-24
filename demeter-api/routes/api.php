@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\FormularioController;
 use App\Http\Controllers\Api\ReceitaApiController;
 use App\Http\Controllers\Api\MaeInfoController;
+use App\Http\Controllers\Api\ArtigoApiController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/formulario', [FormularioController::class, 'store']);
@@ -53,4 +54,17 @@ Route::prefix('semanas-gestacionais')->name('semanas-gestacionais.')->group(func
     Route::get('/{semana}', [SemanaGestacionalController::class, 'show'])
         ->name('show')
         ->where('semana', '[0-9]+');
+});
+
+// Leitura pública
+Route::prefix('artigos')->group(function () {
+    Route::get('/',           [ArtigoApiController::class, 'index']);
+    Route::get('/{artigo}',   [ArtigoApiController::class, 'show']);
+});
+
+// Escrita — apenas admin autenticado
+Route::middleware('auth:sanctum')->prefix('admin/artigos')->group(function () {
+    Route::post('/',           [ArtigoApiController::class, 'store']);
+    Route::put('/{artigo}',    [ArtigoApiController::class, 'update']);
+    Route::delete('/{artigo}', [ArtigoApiController::class, 'destroy']);
 });
