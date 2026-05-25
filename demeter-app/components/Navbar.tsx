@@ -129,7 +129,7 @@ export default function Navbar({ current }: { current: NavTab }) {
   const tabs: { key: NavTab; route: string; icon: (sel: boolean) => React.ReactElement }[] = [
     { key: "home",    route: "/home",    icon: (s) => <IconHome selected={s} /> },
     { key: "receitas",route: "/receitas",icon: (s) => <IconReceitas selected={s} /> },
-    { key: "gravida", route: "/gravida", icon: (s) => <IconGravida selected={s} /> },
+    { key: "gravida", route: "/maeinfo", icon: (s) => <IconGravida selected={s} /> },
     { key: "perfil",  route: "/maeinfo", icon: (s) => <IconPerfil selected={s} /> },
   ];
 
