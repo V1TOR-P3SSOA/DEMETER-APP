@@ -4,10 +4,14 @@ use App\Http\Controllers\Api\SemanaGestacionalController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\FormularioController;
 use App\Http\Controllers\Api\ReceitaApiController;
+use App\Http\Controllers\Api\MaeInfoController;
+use App\Http\Controllers\Api\ArtigoApiController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/formulario', [FormularioController::class, 'store']);
     Route::get('/formulario', [FormularioController::class, 'show']);
+
+    Route::get('/mae/info', [MaeInfoController::class, 'show']);
 
      Route::prefix('receitas')->name('api.receitas.')->group(function () {
         Route::get('/',          [ReceitaApiController::class, 'index']);
@@ -16,16 +20,20 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
-Route::post('/register', [\App\Http\Controllers\Auth\RegisteredUserController::class, 'store']);
-Route::post('/login', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'store']);
+Route::middleware('auth:sanctum')->prefix('admin/receitas')->group(function () {
+    Route::post('/',             [ReceitaApiController::class, 'store']);
+    Route::put('/{receita}',     [ReceitaApiController::class, 'update']);
+    Route::delete('/{receita}',  [ReceitaApiController::class, 'destroy']);
+});
+
+Route::post('/register', [\App\Http\Controllers\Api\AuthController::class, 'register']);
+Route::post('/login',    [\App\Http\Controllers\Api\AuthController::class, 'login']);
+Route::post('/logout',   [\App\Http\Controllers\Api\AuthController::class, 'logout']);
 
 Route::prefix('receitas')->name('api.receitas.')->group(function () {
-    Route::get('/',          [ReceitaApiController::class, 'index'])
-        ->name('index');
-    Route::get('/tags',      [ReceitaApiController::class, 'tags'])
-        ->name('tags');
-    Route::get('/{receita}', [ReceitaApiController::class, 'show'])
-        ->name('show');
+    Route::get('/',          [ReceitaApiController::class, 'index'])->name('index');
+    Route::get('/tags',      [ReceitaApiController::class, 'tags'])->name('tags');
+    Route::get('/{receita}', [ReceitaApiController::class, 'show'])->name('show');
 });
 
 Route::prefix('semanas-gestacionais')->name('semanas-gestacionais.')->group(function () {
@@ -46,4 +54,17 @@ Route::prefix('semanas-gestacionais')->name('semanas-gestacionais.')->group(func
     Route::get('/{semana}', [SemanaGestacionalController::class, 'show'])
         ->name('show')
         ->where('semana', '[0-9]+');
+});
+
+// Leitura pública
+Route::prefix('artigos')->group(function () {
+    Route::get('/',           [ArtigoApiController::class, 'index']);
+    Route::get('/{artigo}',   [ArtigoApiController::class, 'show']);
+});
+
+// Escrita — apenas admin autenticado
+Route::middleware('auth:sanctum')->prefix('admin/artigos')->group(function () {
+    Route::post('/',           [ArtigoApiController::class, 'store']);
+    Route::put('/{artigo}',    [ArtigoApiController::class, 'update']);
+    Route::delete('/{artigo}', [ArtigoApiController::class, 'destroy']);
 });

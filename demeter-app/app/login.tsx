@@ -195,7 +195,11 @@ export default function LoginScreen() {
     try {
       const data = await loginRequest(email.trim(), password);
       await AsyncStorage.setItem("auth_token", data.token);
-      if (data.tem_formulario) {
+      await AsyncStorage.setItem("user_role", data.role ?? "user");
+
+      if (data.role === "admin") {
+        router.replace("/admin/admin" as any);
+      } else if (data.tem_formulario) {
         router.replace("/home" as any);
       } else {
         router.replace("/formulario" as any);

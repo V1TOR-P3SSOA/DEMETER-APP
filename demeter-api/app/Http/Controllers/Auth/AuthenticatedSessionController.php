@@ -4,44 +4,62 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Models\Formulario;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Handle an incoming authentication request.
+     * Exibe a tela de login (web).
      */
-    public function store(LoginRequest $request): JsonResponse
+    public function create(): View
     {
-        $request->authenticate();
-
-        $user = Auth::user();
-
-        // Gera o token Sanctum
-        $token = $user->createToken('app')->plainTextToken;
-
-        // Verifica se o usuário já preencheu o formulário
-        $temFormulario = Formulario::where('user_id', $user->id)->exists();
-
-        return response()->json([
-            'token'          => $token,
-            'tem_formulario' => $temFormulario,
-        ]);
+        return view('auth.login');
     }
 
     /**
-     * Destroy an authenticated session.
+     * Processa o login.
+     * - Requisições web (browser): autentica via sessão e redireciona.
+     * - Requisições API (Accept: application/json): retorna token Sanctum.
      */
-    public function destroy(Request $request): JsonResponse
+    public function store(LoginRequest $request): JsonResponse|RedirectResponse
     {
-        // Revoga todos os tokens do usuário autenticado
-        $request->user()->tokens()->delete();
+        $request->authenticate();
+        
+        // Requisição da API (mobile)
+        if ($request->expectsJson()) {
+            $token = $request->user()->createToken('mobile')->plainTextToken;
 
+            return response()->json([
+                'token'          => $token,
+                'tem_formulario' => $request->user()->formulario()->exists(),
+            ]);
+        }
+
+        // Requisição web (browser/admin)
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('admin.receitas.index'));
+    }
+
+    /**
+     * Logout.
+     */
+    public function destroy(Request $request): JsonResponse|RedirectResponse
+    {
         Auth::guard('web')->logout();
 
-        return response()->json(['message' => 'Logout realizado com sucesso.']);
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Logged out']);
+        }
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login');
     }
 }
