@@ -1,17 +1,17 @@
-// app/home.tsx
+// app/perfil.tsx
 import React from "react";
 import { View, StyleSheet, StatusBar } from "react-native";
 import Navbar from "../components/Navbar";
 
-export default function HomeScreen() {
+export default function PerfilScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8d7da" />
 
-      {/* Conteúdo principal — a ser preenchido */}
+      {/* Conteúdo — a ser preenchido */}
       <View style={styles.body} />
 
-      <Navbar current="home" />
+      <Navbar current="gravida" />
     </View>
   );
 }
