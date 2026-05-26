@@ -20,6 +20,10 @@ export default function RootLayout() {
         <Stack.Screen name="admin/dashboard" options={{ headerShown: false }} />
         <Stack.Screen name="admin/create_receita" options={{ headerShown: false }} />
         <Stack.Screen name="admin/create_artigo" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/receitas" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/edit_receita" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/artigos" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/edit_artigo" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
