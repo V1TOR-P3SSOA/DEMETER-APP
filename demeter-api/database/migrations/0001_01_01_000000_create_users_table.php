@@ -11,9 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('role')->default('user')->after('password');
-        });
+
 
         Schema::create('users', function (Blueprint $table) {
             $table->id();
@@ -21,6 +19,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('role')->default('user')->after('password');
             $table->rememberToken();
             $table->timestamps();
         });
