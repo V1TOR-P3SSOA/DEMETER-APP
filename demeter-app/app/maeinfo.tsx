@@ -13,7 +13,6 @@ import {
   StatusBar,
   Image,
 } from "react-native";
-import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Navbar from "../components/Navbar";
 
@@ -41,15 +40,32 @@ async function fetchMaeInfo(): Promise<MaeInfo> {
   return response.json();
 }
 
-function StatusModal({ visible, tipo, onClose }: { visible: boolean; tipo: "finalizada" | "interrompida" | null; onClose: () => void }) {
+function StatusModal({
+  visible,
+  tipo,
+  onClose,
+}: {
+  visible: boolean;
+  tipo: "finalizada" | "interrompida" | null;
+  onClose: () => void;
+}) {
   const scaleAnim = useRef(new Animated.Value(0.85)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
       Animated.parallel([
-        Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, damping: 14, stiffness: 200 }),
-        Animated.timing(opacityAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          damping: 14,
+          stiffness: 200,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
       ]).start();
     } else {
       scaleAnim.setValue(0.85);
@@ -57,20 +73,45 @@ function StatusModal({ visible, tipo, onClose }: { visible: boolean; tipo: "fina
     }
   }, [visible]);
 
-  const conteudo = tipo === "finalizada"
-    ? { emoji: "🎉", titulo: "Parabéns!", texto: "Que momento incrível! Sua jornada de gestação chegou ao fim. Desejamos toda saúde e felicidade para você e seu bebê!", corIcone: "#6b7c5c" }
-    : { emoji: "🤍", titulo: "Meus pêsames...", texto: "Sentimos muito pelo que você está passando. Você não está sozinha. Cuide-se com muito carinho.", corIcone: "#a0a0a0" };
+  const conteudo =
+    tipo === "finalizada"
+      ? {
+          emoji: "🎉",
+          titulo: "Parabéns!",
+          texto: "Que momento incrível! Sua jornada de gestação chegou ao fim. Desejamos toda saúde e felicidade para você e seu bebê!",
+          corIcone: "#6b7c5c",
+        }
+      : {
+          emoji: "🤍",
+          titulo: "Meus pêsames...",
+          texto: "Sentimos muito pelo que você está passando. Você não está sozinha. Cuide-se com muito carinho.",
+          corIcone: "#a0a0a0",
+        };
 
   return (
-    <Modal transparent visible={visible} animationType="none" onRequestClose={onClose}>
+    <Modal
+      transparent
+      visible={visible}
+      animationType="none"
+      onRequestClose={onClose}
+    >
       <View style={modal.overlay}>
-        <Animated.View style={[modal.box, { opacity: opacityAnim, transform: [{ scale: scaleAnim }] }]}>
+        <Animated.View
+          style={[
+            modal.box,
+            { opacity: opacityAnim, transform: [{ scale: scaleAnim }] },
+          ]}
+        >
           <View style={[modal.iconCircle, { backgroundColor: conteudo.corIcone }]}>
             <Text style={modal.iconEmoji}>{conteudo.emoji}</Text>
           </View>
           <Text style={modal.titulo}>{conteudo.titulo}</Text>
           <Text style={modal.texto}>{conteudo.texto}</Text>
-          <TouchableOpacity style={modal.btn} onPress={onClose} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={modal.btn}
+            onPress={onClose}
+            activeOpacity={0.8}
+          >
             <Text style={modal.btnTexto}>Fechar</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -88,7 +129,9 @@ export default function MaeInfoScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(40)).current;
 
-  useEffect(() => { carregarDados(); }, []);
+  useEffect(() => {
+    carregarDados();
+  }, []);
 
   async function carregarDados() {
     try {
@@ -97,8 +140,17 @@ export default function MaeInfoScreen() {
       const info = await fetchMaeInfo();
       setDados(info);
       Animated.parallel([
-        Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
-        Animated.spring(slideAnim, { toValue: 0, friction: 8, tension: 60, useNativeDriver: true }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          friction: 8,
+          tension: 60,
+          useNativeDriver: true,
+        }),
       ]).start();
     } catch {
       setErro("Não foi possível carregar suas informações.");
@@ -106,6 +158,13 @@ export default function MaeInfoScreen() {
       setCarregando(false);
     }
   }
+
+  // ── Salva status no AsyncStorage e abre o modal ───────────────────────────
+  async function salvarStatus(tipo: "finalizada" | "interrompida") {
+  const token = await AsyncStorage.getItem("auth_token");
+  await AsyncStorage.setItem(`status_gestacao_${token}`, tipo);
+  setModalTipo(tipo);
+}
 
   if (carregando) {
     return (
@@ -122,7 +181,11 @@ export default function MaeInfoScreen() {
       <View style={styles.centralizador}>
         <StatusBar barStyle="dark-content" backgroundColor="#f8d7da" />
         <Text style={styles.textoErro}>{erro}</Text>
-        <TouchableOpacity style={styles.btnTentar} onPress={carregarDados} activeOpacity={0.85}>
+        <TouchableOpacity
+          style={styles.btnTentar}
+          onPress={carregarDados}
+          activeOpacity={0.85}
+        >
           <Text style={styles.btnTentarTexto}>Tentar novamente</Text>
         </TouchableOpacity>
       </View>
@@ -132,30 +195,56 @@ export default function MaeInfoScreen() {
   return (
     <View style={styles.outer}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8d7da" />
-      <StatusModal visible={modalTipo !== null} tipo={modalTipo} onClose={() => setModalTipo(null)} />
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Animated.View style={[styles.container, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+      <StatusModal
+        visible={modalTipo !== null}
+        tipo={modalTipo}
+        onClose={() => setModalTipo(null)}
+      />
 
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
+        <Animated.View
+          style={[
+            styles.container,
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+          ]}
+        >
           <View style={styles.avatarCircle}>
-            <Image source={require("../assets/images/demeter.png")} style={styles.avatarImage} resizeMode="contain" />
+            <Image
+              source={require("../assets/images/demeter.png")}
+              style={styles.avatarImage}
+              resizeMode="contain"
+            />
           </View>
 
           <Text style={styles.tituloPagina}>Minhas Informações</Text>
           <Text style={styles.subtitulo}>Olá, {dados.nome} 💗</Text>
 
+          {/* ── Card: Dados pessoais ── */}
           <View style={styles.card}>
             <Text style={styles.cardTitulo}>Dados Pessoais</Text>
-            <View style={styles.linha}><Text style={styles.rotulo}>Nome</Text><Text style={styles.valor}>{dados.nome}</Text></View>
+            <View style={styles.linha}>
+              <Text style={styles.rotulo}>Nome</Text>
+              <Text style={styles.valor}>{dados.nome}</Text>
+            </View>
             <View style={styles.divisor} />
-            <View style={styles.linha}><Text style={styles.rotulo}>Idade</Text><Text style={styles.valor}>{dados.idade} anos</Text></View>
+            <View style={styles.linha}>
+              <Text style={styles.rotulo}>Idade</Text>
+              <Text style={styles.valor}>{dados.idade} anos</Text>
+            </View>
             <View style={styles.divisor} />
             <View style={styles.linha}>
               <Text style={styles.rotulo}>Trimestre</Text>
-              <View style={styles.badge}><Text style={styles.badgeTexto}>{dados.trimestre}º Trimestre</Text></View>
+              <View style={styles.badge}>
+                <Text style={styles.badgeTexto}>{dados.trimestre}º Trimestre</Text>
+              </View>
             </View>
           </View>
 
+          {/* ── Card: Métricas ── */}
           <View style={styles.card}>
             <Text style={styles.cardTitulo}>Métricas Corporais</Text>
             <View style={styles.gridMetricas}>
@@ -173,8 +262,13 @@ export default function MaeInfoScreen() {
             </View>
             <View style={styles.divisor} />
             <View style={styles.linha}>
-              <View><Text style={styles.rotulo}>IMC</Text><Text style={styles.metricaDestaque}>{dados.imc}</Text></View>
-              <View style={styles.badge}><Text style={styles.badgeTexto}>{dados.classificacao_imc}</Text></View>
+              <View>
+                <Text style={styles.rotulo}>IMC</Text>
+                <Text style={styles.metricaDestaque}>{dados.imc}</Text>
+              </View>
+              <View style={styles.badge}>
+                <Text style={styles.badgeTexto}>{dados.classificacao_imc}</Text>
+              </View>
             </View>
             <View style={styles.divisor} />
             <View>
@@ -183,35 +277,54 @@ export default function MaeInfoScreen() {
             </View>
           </View>
 
-          {(dados.doencas || (dados.restricoes_alimentares && dados.restricoes_alimentares.length > 0)) && (
+          {/* ── Card: Saúde ── */}
+          {(dados.doencas ||
+            (dados.restricoes_alimentares &&
+              dados.restricoes_alimentares.length > 0)) && (
             <View style={styles.card}>
               <Text style={styles.cardTitulo}>Saúde</Text>
               {dados.doencas && (
-                <><Text style={styles.rotulo}>Doenças / Condições</Text><Text style={styles.textoSaude}>{dados.doencas}</Text></>
-              )}
-              {dados.restricoes_alimentares && dados.restricoes_alimentares.length > 0 && (
                 <>
-                  {dados.doencas && <View style={styles.divisor} />}
-                  <Text style={styles.rotulo}>Restrições Alimentares</Text>
-                  <View style={styles.tagsContainer}>
-                    {dados.restricoes_alimentares.map((item, i) => (
-                      <View key={i} style={styles.tag}><Text style={styles.tagTexto}>{item}</Text></View>
-                    ))}
-                  </View>
+                  <Text style={styles.rotulo}>Doenças / Condições</Text>
+                  <Text style={styles.textoSaude}>{dados.doencas}</Text>
                 </>
               )}
+              {dados.restricoes_alimentares &&
+                dados.restricoes_alimentares.length > 0 && (
+                  <>
+                    {dados.doencas && <View style={styles.divisor} />}
+                    <Text style={styles.rotulo}>Restrições Alimentares</Text>
+                    <View style={styles.tagsContainer}>
+                      {dados.restricoes_alimentares.map((item, i) => (
+                        <View key={i} style={styles.tag}>
+                          <Text style={styles.tagTexto}>{item}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </>
+                )}
             </View>
           )}
 
+          {/* ── Botões de status ── */}
           <Text style={styles.labelBotoes}>Atualizar status da gestação:</Text>
-          <TouchableOpacity style={[styles.btn, styles.btnFinalizada]} onPress={() => setModalTipo("finalizada")} activeOpacity={0.85}>
+
+          <TouchableOpacity
+            style={[styles.btn, styles.btnFinalizada]}
+            onPress={() => salvarStatus("finalizada")}
+            activeOpacity={0.85}
+          >
             <Text style={styles.btnTexto}>🎉  Gravidez Finalizada</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.btn, styles.btnInterrompida]} onPress={() => setModalTipo("interrompida")} activeOpacity={0.85}>
+
+          <TouchableOpacity
+            style={[styles.btn, styles.btnInterrompida]}
+            onPress={() => salvarStatus("interrompida")}
+            activeOpacity={0.85}
+          >
             <Text style={styles.btnTexto}>🤍  Gravidez Interrompida</Text>
           </TouchableOpacity>
 
-          {/* Espaço para a navbar não cobrir o último botão */}
           <View style={{ height: 100 }} />
         </Animated.View>
       </ScrollView>
@@ -223,9 +336,15 @@ export default function MaeInfoScreen() {
   );
 }
 
-const ROSA = "#b5405a", ROSA_CLARO = "#f8d7da", ROSA_BORDA = "#e8c8d0";
-const CREME = "#f5f0e8", CREME_CARD = "#f0ead8", TEXTO = "#3a1a22";
-const SUAVE = "#a07080", VERDE = "#6b7c5c", CINZA = "#a0a0a0";
+const ROSA = "#b5405a";
+const ROSA_CLARO = "#f8d7da";
+const ROSA_BORDA = "#e8c8d0";
+const CREME = "#f5f0e8";
+const CREME_CARD = "#f0ead8";
+const TEXTO = "#3a1a22";
+const SUAVE = "#a07080";
+const VERDE = "#6b7c5c";
+const CINZA = "#a0a0a0";
 
 const styles = StyleSheet.create({
   outer: { flex: 1, backgroundColor: ROSA_CLARO },
