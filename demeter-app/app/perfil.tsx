@@ -11,7 +11,7 @@ export default function PerfilScreen() {
       {/* Conteúdo — a ser preenchido */}
       <View style={styles.body} />
 
-      <Navbar current="gravida" />
+      <Navbar current="perfil" />
     </View>
   );
 }

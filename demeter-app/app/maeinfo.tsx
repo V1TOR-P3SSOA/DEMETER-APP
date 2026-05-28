@@ -330,7 +330,7 @@ export default function MaeInfoScreen() {
       </ScrollView>
 
       <View style={styles.navbarWrap}>
-        <Navbar current="perfil" />
+        <Navbar current="gravida" />
       </View>
     </View>
   );
