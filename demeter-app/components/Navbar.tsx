@@ -130,7 +130,7 @@ export default function Navbar({ current }: { current: NavTab }) {
     { key: "home",    route: "/home",    icon: (s) => <IconHome selected={s} /> },
     { key: "receitas",route: "/receitas",icon: (s) => <IconReceitas selected={s} /> },
     { key: "gravida", route: "/maeinfo", icon: (s) => <IconGravida selected={s} /> },
-    { key: "perfil",  route: "/maeinfo", icon: (s) => <IconPerfil selected={s} /> },
+    { key: "perfil",  route: "/perfil", icon: (s) => <IconPerfil selected={s} /> },
   ];
 
   return (
