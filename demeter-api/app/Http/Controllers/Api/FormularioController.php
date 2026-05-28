@@ -62,11 +62,13 @@ class FormularioController extends Controller
             ?? ($validated['acompanhamento_medico'] === 'Sim');
 
         // Normaliza tipo_gestacao para os valores esperados pelo banco
-        $validated['tipo_gestacao'] = match (strtolower(trim($validated['tipo_gestacao']))) {
-            'única', 'unica' => 'unica',
-            'gemelar'        => 'gemelar',
-            default          => strtolower(trim($validated['tipo_gestacao'])),
-        };
+        // ✅ Correto — normaliza acentos também
+// Normaliza tipo_gestacao — remove acentos, espaços e coloca minúsculo
+$tipo = trim($validated['tipo_gestacao']);
+$tipo = mb_strtolower($tipo, 'UTF-8');
+$tipo = str_replace(['ú', 'u00fa'], 'u', $tipo); // remove acento do ú
+
+$validated['tipo_gestacao'] = str_contains($tipo, 'nica') ? 'unica' : 'gemelar';
 
         $formulario = Formulario::updateOrCreate(
             ['user_id' => $request->user()->id],

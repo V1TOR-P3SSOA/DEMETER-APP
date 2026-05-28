@@ -14,7 +14,7 @@ export default function AdminScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>deu certoooooooooo</Text>
+      <Text style={styles.text}>"Seja bem vinda(a)!"</Text>
 
       <TouchableOpacity style={styles.btn} onPress={handleLogout}>
         <Text style={styles.btnText}>Logout</Text>
@@ -24,6 +24,12 @@ export default function AdminScreen() {
       </TouchableOpacity>
       <TouchableOpacity style={styles.btn} onPress={() => router.push("/admin/create_artigo" as any)}>
         <Text style={styles.btnText}>+ Novo Artigo</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.btn} onPress={() => router.push("/admin/receitas" as any)}>
+        <Text style={styles.btnText}>Gerenciar Receitas</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.btn} onPress={() => router.push("/admin/artigos" as any)}>
+        <Text style={styles.btnText}>Gerenciar Artigos</Text>
       </TouchableOpacity>
     </View>
   );

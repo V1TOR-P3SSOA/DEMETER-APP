@@ -198,7 +198,7 @@ export default function LoginScreen() {
       await AsyncStorage.setItem("user_role", data.role ?? "user");
 
       if (data.role === "admin") {
-        router.replace("/admin/admin" as any);
+        router.replace("/admin/dashboard" as any);
       } else if (data.tem_formulario) {
         router.replace("/home" as any);
       } else {
