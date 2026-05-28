@@ -6,18 +6,26 @@ use App\Http\Controllers\Api\FormularioController;
 use App\Http\Controllers\Api\ReceitaApiController;
 use App\Http\Controllers\Api\MaeInfoController;
 use App\Http\Controllers\Api\ArtigoApiController;
+use App\Http\Controllers\Api\PerfilController;
 
 // ─── Rotas autenticadas ───────────────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
 
+    // Formulário gestacional
     Route::post('/formulario', [FormularioController::class, 'store']);
     Route::get('/formulario',  [FormularioController::class, 'show']);
 
+    // Perfil do usuário
+    Route::get('/perfil',   [PerfilController::class, 'show']);
+    Route::patch('/perfil', [PerfilController::class, 'update']);
+
+    // Informações da mãe
     Route::get('/mae/info', [MaeInfoController::class, 'show']);
 
-    // ✅ URL completa com o prefixo correto
+    // Semana gestacional do usuário autenticado
     Route::get('/semanas-gestacionais/minha-semana', [SemanaGestacionalController::class, 'semanaDoUsuario']);
 
+    // Receitas (autenticadas)
     Route::prefix('receitas')->group(function () {
         Route::get('/',          [ReceitaApiController::class, 'index']);
         Route::get('/tags',      [ReceitaApiController::class, 'tags']);
