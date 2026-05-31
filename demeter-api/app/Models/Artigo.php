@@ -9,5 +9,6 @@ class Artigo extends Model
     protected $fillable = [
         'titulo',
         'conteudo',
+        'foto_url',
     ];
 }
