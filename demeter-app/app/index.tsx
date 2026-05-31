@@ -1,4 +1,5 @@
 // app/index.jsx  ← esta é a rota inicial do Expo Router
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useRef } from "react";
 import {
   View,
@@ -32,14 +33,27 @@ export default function SplashScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-
     // Vai para login depois de 2.6s
     const timer = setTimeout(() => {
       Animated.timing(opacity, {
         toValue: 0,
         duration: 450,
         useNativeDriver: true,
-      }).start(() => router.replace("/login" as any));
+      }).start(async () => {
+        const token = await AsyncStorage.getItem("auth_token");
+        const role  = await AsyncStorage.getItem("user_role");
+
+        if (!token) {
+          router.replace("/login" as any);
+          return;
+        }
+
+        if (role === "admin") {
+          router.replace("/admin/dashboard" as any);
+        } else {
+          router.replace("/home" as any);
+        }
+      });
     }, 2600);
 
     return () => clearTimeout(timer);
