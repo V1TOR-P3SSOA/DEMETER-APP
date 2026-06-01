@@ -5,25 +5,34 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
-
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-        <Stack.Screen name="admin/dashboard" options={{ headerShown: false }} />
+        {/* Rotas públicas */}
+        <Stack.Screen name="index"            options={{ headerShown: false }} />
+        <Stack.Screen name="login"            options={{ headerShown: false }} />
+        <Stack.Screen name="register"         options={{ headerShown: false }} />
+
+        {/* Rotas de usuário comum */}
+        <Stack.Screen name="formulario"       options={{ headerShown: false }} />
+        <Stack.Screen name="home"             options={{ headerShown: false }} />
+        <Stack.Screen name="receitas"         options={{ headerShown: false }} />
+        <Stack.Screen name="artigos"          options={{ headerShown: false }} />
+        <Stack.Screen name="perfil"           options={{ headerShown: false }} />
+        <Stack.Screen name="maeinfo"          options={{ headerShown: false }} />
+        <Stack.Screen name="editar-formulario" options={{ headerShown: false }} />
+
+        {/* Rotas de admin */}
+        <Stack.Screen name="admin/dashboard"     options={{ headerShown: false }} />
         <Stack.Screen name="admin/create_receita" options={{ headerShown: false }} />
-        <Stack.Screen name="admin/create_artigo" options={{ headerShown: false }} />
-        <Stack.Screen name="admin/receitas" options={{ headerShown: false }} />
-        <Stack.Screen name="admin/edit_receita" options={{ headerShown: false }} />
-        <Stack.Screen name="admin/artigos" options={{ headerShown: false }} />
-        <Stack.Screen name="admin/edit_artigo" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/edit_receita"   options={{ headerShown: false }} />
+        <Stack.Screen name="admin/receitas"       options={{ headerShown: false }} />
+        <Stack.Screen name="admin/create_artigo"  options={{ headerShown: false }} />
+        <Stack.Screen name="admin/edit_artigo"    options={{ headerShown: false }} />
+        <Stack.Screen name="admin/artigos"        options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
