@@ -83,7 +83,7 @@ function useFrasesLoop(semana: SemanaInfo | null) {
         setFraseIndex((i) => (i + 1) % frases.length);
         setVisivel(true);
       }, 500);
-    }, 3500);
+    }, 5500);
     return () => clearInterval(intervalo);
   }, [frases.length]);
 
