@@ -1,3 +1,4 @@
+// app/artigos.tsx
 import React, { useEffect, useState } from "react";
 import {
   View, Text, FlatList, TouchableOpacity,
@@ -5,6 +6,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Navbar from "../components/Navbar";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -71,8 +73,10 @@ export default function ArtigosScreen() {
         ListEmptyComponent={
           <Text style={styles.vazio}>Nenhum artigo cadastrado ainda.</Text>
         }
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 110 }}
       />
+
+      <Navbar current="artigos" />
     </View>
   );
 }
