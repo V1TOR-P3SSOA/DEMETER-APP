@@ -13,10 +13,32 @@ import {
   Alert,
   StatusBar,
   Platform,
+  TextInput,
 } from "react-native";
 import Navbar from "../components/Navbar";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
+// ─── Enums para os filtros ───────────────────────────────────────────────────
+const FILTROS: Record<string, string[]> = {
+  tempo:                  ["semana 1-4","semana 5-8","semana 9-12","segundo trimestre","terceiro trimestre","pré parto"],
+  nutrientes_principais:  ["rico em ferro","rico em cálcio","rico em dha","rico em proteínas","rico em fibras","rico em ácido fólico","rico em vitamina c","rico em magnésio","rico em potássio","rico em colina"],
+  sintomas_gestacao:      ["para enjoo","para azia","para constipação","para fadiga","para inchaço","para anemia","para falta de apetite","para desejos alimentares","energia rápida"],
+  restricoes_alimentares: ["vegetariana","vegana","sem lactose","sem glúten","baixo açúcar","sem frutos do mar","sem oleaginosas","diabéticas"],
+  tipos_refeicoes:        ["café da manhã","lanche","almoço","jantar","sobremesa saudável","ceia","smoothie","marmita","refeição rápida"],
+  tempo_preparo:          ["até 10 min","até 20 min","até 40 min","prática","uma panela só"],
+  objetivo_nutricional:   ["ganho de peso saudável","controle glicêmico","aumento de ferro","saúde intestinal","desenvolvimento cerebral do bebê","fortalecimento ósseo","hidratação","imunidade"],
+};
+
+const FILTROS_LABELS: Record<string, string> = {
+  tempo:                  "Período",
+  nutrientes_principais:  "Nutriente",
+  sintomas_gestacao:      "Sintoma",
+  restricoes_alimentares: "Restrição",
+  tipos_refeicoes:        "Refeição",
+  tempo_preparo:          "Preparo",
+  objetivo_nutricional:   "Objetivo",
+};
 
 // ─── Cores por categoria de tag ──────────────────────────────────────────────
 const TAG_COLORS: Record<string, { bg: string; text: string }> = {
@@ -44,6 +66,7 @@ type Receita = {
   foto_url?: string;
 };
 
+// ─── Componentes Tag, ReceitaTags, ReceitaCard, ReceitaModal (inalterados) ───
 function Tag({ label, categoria }: { label: string; categoria: keyof typeof TAG_COLORS }) {
   const color = TAG_COLORS[categoria] ?? { bg: "#eee", text: "#555" };
   return (
@@ -141,17 +164,116 @@ const modal = StyleSheet.create({
   closeBtnText: { color: "#f5f0e8", fontSize: 15, fontWeight: "700" },
 });
 
+// ─── Modal de filtros ────────────────────────────────────────────────────────
+function FiltrosModal({
+  visible,
+  filtrosAtivos,
+  onAplicar,
+  onFechar,
+}: {
+  visible: boolean;
+  filtrosAtivos: Record<string, string>;
+  onAplicar: (filtros: Record<string, string>) => void;
+  onFechar: () => void;
+}) {
+  const [selecionados, setSelecionados] = useState<Record<string, string>>(filtrosAtivos);
+
+  useEffect(() => { setSelecionados(filtrosAtivos); }, [visible]);
+
+  const toggle = (campo: string, valor: string) => {
+    setSelecionados((prev) => ({
+      ...prev,
+      [campo]: prev[campo] === valor ? "" : valor,
+    }));
+  };
+
+  const limpar = () => setSelecionados({});
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onFechar}>
+      <View style={fm.overlay}>
+        <View style={fm.sheet}>
+          <View style={fm.header}>
+            <Text style={fm.titulo}>Filtros</Text>
+            <TouchableOpacity onPress={limpar}>
+              <Text style={fm.limpar}>Limpar tudo</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+            {Object.entries(FILTROS).map(([campo, opcoes]) => (
+              <View key={campo} style={fm.grupo}>
+                <Text style={fm.grupoLabel}>{FILTROS_LABELS[campo]}</Text>
+                <View style={fm.chips}>
+                  {opcoes.map((op) => (
+                    <TouchableOpacity
+                      key={op}
+                      style={[fm.chip, selecionados[campo] === op && fm.chipAtivo]}
+                      onPress={() => toggle(campo, op)}
+                    >
+                      <Text style={[fm.chipText, selecionados[campo] === op && fm.chipTextAtivo]}>
+                        {op}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+          <View style={fm.footer}>
+            <TouchableOpacity style={fm.btnAplicar} onPress={() => onAplicar(selecionados)}>
+              <Text style={fm.btnAplicarText}>Aplicar filtros</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const fm = StyleSheet.create({
+  overlay: { flex: 1, backgroundColor: "#00000055", justifyContent: "flex-end" },
+  sheet: { 
+  backgroundColor: "#fdf6f0", 
+  borderTopLeftRadius: 28, 
+  borderTopRightRadius: 28, 
+  height: "90%",  // <- mude maxHeight para height
+  paddingBottom: 24 
+  },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 20, borderBottomWidth: 1, borderColor: "#e8c8d0" },
+  titulo: { fontSize: 20, fontWeight: "700", color: "#b5405a" },
+  limpar: { fontSize: 13, color: "#6b7c5c", fontWeight: "600" },
+  grupo: { paddingHorizontal: 20, paddingTop: 16 },
+  grupoLabel: { fontSize: 13, fontWeight: "700", color: "#3a1a22", marginBottom: 10 },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  chip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, backgroundColor: "#f0ead8", borderWidth: 1, borderColor: "#d4a0aa" },
+  chipAtivo: { backgroundColor: "#b5405a", borderColor: "#b5405a" },
+  chipText: { fontSize: 12, color: "#3a1a22" },
+  chipTextAtivo: { color: "#fff", fontWeight: "600" },
+  footer: { paddingHorizontal: 20, paddingTop: 16 },
+  btnAplicar: { backgroundColor: "#6b7c5c", borderRadius: 12, paddingVertical: 14, alignItems: "center" },
+  btnAplicarText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+});
+
+// ─── Tela principal ──────────────────────────────────────────────────────────
 export default function ReceitasScreen() {
   const [receitas, setReceitas] = useState<Receita[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Receita | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [filtrosVisible, setFiltrosVisible] = useState(false);
+  const [search, setSearch] = useState("");
+  const [filtrosAtivos, setFiltrosAtivos] = useState<Record<string, string>>({});
 
   useEffect(() => { fetchReceitas(); }, []);
 
-  const fetchReceitas = async () => {
+  const fetchReceitas = async (params: Record<string, string> = {}) => {
+    setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/receitas`, { headers: { Accept: "application/json" } });
+      const query = new URLSearchParams(
+        Object.fromEntries(Object.entries(params).filter(([, v]) => v))
+      ).toString();
+      const url = `${API_URL}/api/receitas${query ? `?${query}` : ""}`;
+      const response = await fetch(url, { headers: { Accept: "application/json" } });
       if (!response.ok) throw new Error("Erro ao carregar receitas.");
       const data = await response.json();
       setReceitas(Array.isArray(data) ? data : data.data ?? []);
@@ -161,6 +283,24 @@ export default function ReceitasScreen() {
       setLoading(false);
     }
   };
+
+  const handleBuscar = () => {
+    fetchReceitas({ ...filtrosAtivos, search });
+  };
+
+  const handleAplicarFiltros = (filtros: Record<string, string>) => {
+    setFiltrosAtivos(filtros);
+    setFiltrosVisible(false);
+    fetchReceitas({ ...filtros, search });
+  };
+
+  const handleLimparTudo = () => {
+    setSearch("");
+    setFiltrosAtivos({});
+    fetchReceitas();
+  };
+
+  const temFiltrosAtivos = Object.values(filtrosAtivos).some((v) => v) || search.trim();
 
   const openModal = (receita: Receita) => { setSelected(receita); setModalVisible(true); };
   const closeModal = () => { setModalVisible(false); setSelected(null); };
@@ -174,11 +314,62 @@ export default function ReceitasScreen() {
         <Text style={styles.headerSub}>para a sua gestação 🌿</Text>
       </View>
 
+      {/* Barra de pesquisa */}
+      <View style={styles.searchRow}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Buscar por nome..."
+          placeholderTextColor="#a06070"
+          value={search}
+          onChangeText={setSearch}
+          onSubmitEditing={handleBuscar}
+          returnKeyType="search"
+        />
+        <TouchableOpacity style={styles.searchBtn} onPress={handleBuscar}>
+          <Text style={styles.searchBtnText}>🔍</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.filterBtn, Object.values(filtrosAtivos).some((v) => v) && styles.filterBtnAtivo]}
+          onPress={() => setFiltrosVisible(true)}
+        >
+          <Text style={styles.filterBtnText}>⚙️</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Chips dos filtros ativos */}
+      {Object.entries(filtrosAtivos).some(([, v]) => v) && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtrosAtivosRow}>
+          {Object.entries(filtrosAtivos)
+            .filter(([, v]) => v)
+            .map(([campo, valor]) => (
+              <TouchableOpacity
+                key={campo}
+                style={styles.filtroAtivoChip}
+                onPress={() => {
+                  const novos = { ...filtrosAtivos, [campo]: "" };
+                  setFiltrosAtivos(novos);
+                  fetchReceitas({ ...novos, search });
+                }}
+              >
+                <Text style={styles.filtroAtivoChipText}>{valor} ✕</Text>
+              </TouchableOpacity>
+            ))}
+          <TouchableOpacity style={styles.limparTudoChip} onPress={handleLimparTudo}>
+            <Text style={styles.limparTudoText}>Limpar tudo</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      )}
+
       {loading ? (
         <ActivityIndicator size="large" color="#b5405a" style={{ marginTop: 40 }} />
       ) : receitas.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyText}>Nenhuma receita disponível ainda.</Text>
+          <Text style={styles.emptyText}>Nenhuma receita encontrada.</Text>
+          {temFiltrosAtivos && (
+            <TouchableOpacity onPress={handleLimparTudo}>
+              <Text style={styles.limparLink}>Limpar filtros</Text>
+            </TouchableOpacity>
+          )}
         </View>
       ) : (
         <FlatList
@@ -194,6 +385,12 @@ export default function ReceitasScreen() {
 
       <Navbar current="receitas" />
       <ReceitaModal receita={selected} visible={modalVisible} onClose={closeModal} />
+      <FiltrosModal
+        visible={filtrosVisible}
+        filtrosAtivos={filtrosAtivos}
+        onAplicar={handleAplicarFiltros}
+        onFechar={() => setFiltrosVisible(false)}
+      />
     </View>
   );
 }
@@ -203,9 +400,32 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12 },
   headerTitle: { fontSize: 32, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", color: "#b5405a", fontWeight: "700" },
   headerSub: { fontSize: 14, color: "#a06070", marginTop: 2 },
+
+  // Barra de pesquisa
+  searchRow: { flexDirection: "row", paddingHorizontal: 16, marginBottom: 8, gap: 8 },
+  searchInput: {
+    flex: 1, backgroundColor: "#fdf6f0", borderRadius: 12, paddingHorizontal: 14,
+    paddingVertical: 10, fontSize: 14, color: "#3a1a22",
+    borderWidth: 1, borderColor: "#e8c8d0",
+  },
+  searchBtn: { backgroundColor: "#fdf6f0", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 1, borderColor: "#e8c8d0", justifyContent: "center" },
+  searchBtnText: { fontSize: 16 },
+  filterBtn: { backgroundColor: "#fdf6f0", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 1, borderColor: "#e8c8d0", justifyContent: "center" },
+  filterBtnAtivo: { backgroundColor: "#b5405a", borderColor: "#b5405a" },
+  filterBtnText: { fontSize: 16 },
+
+  // Chips de filtros ativos
+  filtrosAtivosRow: { paddingHorizontal: 16, marginBottom: 8 },
+  filtroAtivoChip: { backgroundColor: "#b5405a", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, marginRight: 8 },
+  filtroAtivoChipText: { color: "#fff", fontSize: 12, fontWeight: "600" },
+  limparTudoChip: { backgroundColor: "#6b7c5c", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, marginRight: 8 },
+  limparTudoText: { color: "#fff", fontSize: 12, fontWeight: "600" },
+
   list: { paddingHorizontal: 16, paddingBottom: 110 },
-  empty: { flex: 1, alignItems: "center", justifyContent: "center" },
+  empty: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
   emptyText: { fontSize: 15, color: "#a06070" },
+  limparLink: { fontSize: 14, color: "#b5405a", fontWeight: "600", textDecorationLine: "underline" },
+
   card: { backgroundColor: "#fdf6f0", borderRadius: 16, marginBottom: 16, overflow: "hidden", borderWidth: 1, borderColor: "#e8c8d0", shadowColor: "#b5405a", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
   cardImageWrap: { width: "100%", height: 160 },
   cardImage: { width: "100%", height: "100%" },

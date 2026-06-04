@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use App\Models\Formulario;
 
 class AuthController extends Controller
 {
@@ -31,7 +32,7 @@ class AuthController extends Controller
         return response()->json([
             'token'          => $token,
             'role'           => $user->role,
-            'tem_formulario' => false,
+            'tem_formulario' => false, // novo usuário nunca tem formulário
         ], 201);
     }
 
@@ -54,7 +55,7 @@ class AuthController extends Controller
         return response()->json([
             'token'          => $token,
             'role'           => $user->role,
-            'tem_formulario' => false,
+            'tem_formulario' => Formulario::where('user_id', $user->id)->exists(),
         ]);
     }
 

@@ -32,15 +32,16 @@ export default function SplashScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-
     // Vai para login depois de 2.6s
     const timer = setTimeout(() => {
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 450,
-        useNativeDriver: true,
-      }).start(() => router.replace("/login" as any));
-    }, 2600);
+    Animated.timing(opacity, {
+      toValue: 0,
+      duration: 450,
+      useNativeDriver: true,
+    }).start(() => {
+      router.replace("/login" as any);
+    });
+  }, 2600);
 
     return () => clearTimeout(timer);
   }, []);

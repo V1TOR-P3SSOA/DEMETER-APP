@@ -7,8 +7,7 @@ export default function AdminScreen() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await AsyncStorage.removeItem("auth_token");
-    await AsyncStorage.removeItem("user_role");
+    await AsyncStorage.clear(); // limpa tudo, não só token e role
     router.replace("/login" as any);
   };
 

@@ -32,6 +32,7 @@ class ArtigoApiController extends Controller
         $validated = $request->validate([
             'titulo'   => 'required|string|max:255',
             'conteudo' => 'required|string',
+            'foto_url' => 'nullable|string|url',
         ]);
 
         $artigo = Artigo::create($validated);
@@ -57,6 +58,7 @@ class ArtigoApiController extends Controller
         $validated = $request->validate([
             'titulo'   => 'sometimes|string|max:255',
             'conteudo' => 'sometimes|string',
+            'foto_url' => 'nullable|string|url',
         ]);
 
         $artigo->update($validated);
