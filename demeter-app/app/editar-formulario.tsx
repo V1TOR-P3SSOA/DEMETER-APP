@@ -33,13 +33,9 @@ const SINTOMAS   = ["Náusea", "Azia", "Constipação", "Cansaço", "Inchaço", 
 
 // ─── Checkbox ─────────────────────────────────────────────────────────────────
 function CheckboxGroup({
-  options,
-  selected,
-  onChange,
+  options, selected, onChange,
 }: {
-  options: string[];
-  selected: string[];
-  onChange: (val: string[]) => void;
+  options: string[]; selected: string[]; onChange: (val: string[]) => void;
 }) {
   const toggle = (item: string) => {
     if (selected.includes(item)) onChange(selected.filter((i) => i !== item));
@@ -71,6 +67,7 @@ const cb = StyleSheet.create({
   label: { fontSize: 14, color: "#3a1a22", flex: 1 },
 });
 
+// ─── Toast de sucesso ─────────────────────────────────────────────────────────
 function SuccessToast({ visible }: { visible: boolean }) {
   const translateY = useRef(new Animated.Value(-80)).current;
   const opacity    = useRef(new Animated.Value(0)).current;
@@ -90,7 +87,10 @@ function SuccessToast({ visible }: { visible: boolean }) {
   }, [visible]);
 
   return (
-    <Animated.View style={[toast.container, { transform: [{ translateY }], opacity }]} pointerEvents="none">
+    <Animated.View
+      style={[toast.container, { transform: [{ translateY }], opacity }]}
+      pointerEvents="none"
+    >
       <View style={toast.iconWrap}>
         <Text style={toast.icon}>✓</Text>
       </View>
@@ -107,20 +107,26 @@ const toast = StyleSheet.create({
     position: "absolute",
     top: Platform.OS === "ios" ? 54 : 16,
     left: 16, right: 16, zIndex: 999,
-    backgroundColor: "#2d5a3d",
+    backgroundColor: "#6b7c5c",
     borderRadius: 14,
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 14, paddingHorizontal: 16,
-    shadowColor: "#000",
+    shadowColor: "#3a4a2c",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18, shadowRadius: 10,
+    shadowOpacity: 0.2, shadowRadius: 10,
     elevation: 8, gap: 12,
+    borderWidth: 1,
+    borderColor: "#8a9e74",
   },
-  iconWrap: { width: 32, height: 32, borderRadius: 16, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" },
+  iconWrap: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.25)",
+    alignItems: "center", justifyContent: "center",
+  },
   icon:  { color: "#fff", fontSize: 16, fontWeight: "800" },
-  title: { color: "#fff", fontSize: 15, fontWeight: "700" },
-  sub:   { color: "rgba(255,255,255,0.75)", fontSize: 12, marginTop: 1 },
+  title: { color: "#fff", fontSize: 15, fontWeight: "700", fontFamily: Platform.OS === "ios" ? "Georgia" : "serif" },
+  sub:   { color: "rgba(255,255,255,0.8)", fontSize: 12, marginTop: 2 },
 });
 
 // ─── Tela ─────────────────────────────────────────────────────────────────────
@@ -128,22 +134,22 @@ export default function EditarFormularioScreen() {
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const [loading, setLoading]   = useState(true);
+  const [loading, setLoading]     = useState(true);
   const [saving, setSaving]       = useState(false);
   const [showToast, setShowToast] = useState(false);
 
-  const [idade, setIdade]                     = useState("");
-  const [semanas, setSemanas]                 = useState("");
+  const [idade, setIdade]                       = useState("");
+  const [semanas, setSemanas]                   = useState("");
   const [primeiraGestacao, setPrimeiraGestacao] = useState("");
-  const [tipoGestacao, setTipoGestacao]       = useState("");
-  const [altura, setAltura]                   = useState("");
-  const [peso, setPeso]                       = useState("");
-  const [objetivos, setObjetivos]             = useState<string[]>([]);
-  const [restricoes, setRestricoes]           = useState<string[]>([]);
-  const [sintomas, setSintomas]               = useState<string[]>([]);
-  const [suplementos, setSuplementos]         = useState("");
-  const [doencas, setDoencas]                 = useState("");
-  const [acompanhamento, setAcompanhamento]   = useState("");
+  const [tipoGestacao, setTipoGestacao]         = useState("");
+  const [altura, setAltura]                     = useState("");
+  const [peso, setPeso]                         = useState("");
+  const [objetivos, setObjetivos]               = useState<string[]>([]);
+  const [restricoes, setRestricoes]             = useState<string[]>([]);
+  const [sintomas, setSintomas]                 = useState<string[]>([]);
+  const [suplementos, setSuplementos]           = useState("");
+  const [doencas, setDoencas]                   = useState("");
+  const [acompanhamento, setAcompanhamento]     = useState("");
 
   useEffect(() => { carregarFormulario(); }, []);
 
@@ -223,8 +229,11 @@ export default function EditarFormularioScreen() {
         throw new Error(data.message || "Erro ao salvar.");
       }
 
+      // Mostra o toast por 2s e depois navega para o perfil
       dispararToast();
-      await carregarFormulario();
+      setTimeout(() => {
+        router.replace("/perfil" as any);
+      }, 2000);
 
     } catch (err: any) {
       Alert.alert("Erro", err.message);
@@ -243,13 +252,10 @@ export default function EditarFormularioScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={s.outer}
-      behavior="padding"
-    >
-      <StatusBar barStyle="dark-content" backgroundColor="#f8d7da" />
+    <KeyboardAvoidingView style={s.outer} behavior="padding">
+      <StatusBar barStyle="light-content" backgroundColor="#b5405a" />
       <SuccessToast visible={showToast} />
-      
+
       <ScrollView
         contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}
@@ -258,7 +264,6 @@ export default function EditarFormularioScreen() {
       >
         <Animated.View style={{ opacity: fadeAnim, width: "100%" }}>
 
-          {/* Cabeçalho */}
           <View style={s.header}>
             <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
               <Text style={s.backText}>← Voltar</Text>
@@ -350,7 +355,6 @@ const ROSA       = "#b5405a";
 const ROSA_CLARO = "#f8d7da";
 const ROSA_BORDA = "#e8c8d0";
 const CREME_CARD = "#f0ead8";
-const SUAVE      = "#a07080";
 const CREME      = "#f5f0e8";
 const VERDE      = "#6b7c5c";
 

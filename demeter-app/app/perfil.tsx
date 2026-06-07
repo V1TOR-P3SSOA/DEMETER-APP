@@ -1,11 +1,11 @@
 // app/perfil.tsx
-import React, { useEffect, useState, useRef } from "react";
+import React, { useCallback, useState, useRef } from "react";
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, Alert, StatusBar, Platform, Image,
   Animated, Modal, TextInput,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import Svg, { Path } from "react-native-svg";
@@ -132,7 +132,7 @@ function EditarUsuarioModal({
   const [email, setEmail] = useState(usuario.email);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => { setNome(usuario.nome); setEmail(usuario.email); }, [usuario]);
+  React.useEffect(() => { setNome(usuario.nome); setEmail(usuario.email); }, [usuario]);
 
   const handleSave = async () => {
     if (!nome.trim() || !email.trim()) { Alert.alert("Atenção", "Preencha todos os campos."); return; }
@@ -214,7 +214,12 @@ export default function PerfilScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
-  useEffect(() => { carregarPerfil(); }, []);
+  // Recarrega toda vez que a tela recebe foco (inclusive ao voltar do editar-formulario)
+  useFocusEffect(
+    useCallback(() => {
+      carregarPerfil();
+    }, [])
+  );
 
   async function carregarPerfil() {
     try {
@@ -330,20 +335,17 @@ export default function PerfilScreen() {
 
           {/* ── Header ── */}
           <View style={s.header}>
-            {/* Imagem de fundo cortada */}
             <Image
               source={require("../assets/images/header-bg.png")}
               style={s.headerBg}
               resizeMode="cover"
             />
 
-            {/* Botão sair */}
             <TouchableOpacity style={s.sairBtn} onPress={handleSair}>
               <Text style={s.sairIcon}>⇒</Text>
               <Text style={s.sairText}>Sair</Text>
             </TouchableOpacity>
 
-            {/* Avatar */}
             <TouchableOpacity style={s.avatarWrap} onPress={handleFoto} activeOpacity={0.85}>
               {usuario.foto_url ? (
                 <Image source={{ uri: usuario.foto_url }} style={s.avatarImage} />
@@ -371,7 +373,6 @@ export default function PerfilScreen() {
           {/* ── Body ── */}
           <View style={s.body}>
 
-            {/* Card: Dados da conta */}
             <View style={s.card}>
               <View style={s.cardHeader}>
                 <Text style={s.cardTitulo}>Dados da conta</Text>
@@ -385,7 +386,6 @@ export default function PerfilScreen() {
               <InfoLinha rotulo="E-mail:" valor={usuario.email} />
             </View>
 
-            {/* Card: Dados gestacionais */}
             <View style={s.card}>
               <View style={s.cardHeader}>
                 <Text style={s.cardTitulo}>Dados gestacionais</Text>
@@ -439,7 +439,6 @@ export default function PerfilScreen() {
               )}
             </View>
 
-            {/* Botão deletar conta */}
             <TouchableOpacity style={s.deletarBtn} onPress={handleDeletar} activeOpacity={0.85}>
               <Text style={s.deletarBtnText}>💔  Deletar conta</Text>
             </TouchableOpacity>
@@ -474,7 +473,6 @@ const s = StyleSheet.create({
   btnTentar: { backgroundColor: ROSA, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 28 },
   btnTentarTexto: { color: CREME, fontWeight: "700", fontSize: 14 },
 
-  // Header
   header: {
     backgroundColor: ROSA,
     alignItems: "center",
@@ -485,153 +483,100 @@ const s = StyleSheet.create({
   },
   headerBg: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: "100%",
-    height: "100%",
+    top: 0, left: 0, right: 0, bottom: 0,
+    width: "100%", height: "100%",
     opacity: 0.35,
   },
 
-  // Botão sair
   sairBtn: {
     position: "absolute",
-    top: 16,
-    right: 16,
+    top: 16, right: 16,
     alignItems: "center",
     zIndex: 10,
   },
   sairIcon: { fontSize: 26, color: "#fff" },
   sairText: { fontSize: 12, color: "#f8d7da", marginTop: 2, fontWeight: "600" },
 
-  // Avatar
   avatarWrap: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    marginBottom: 14,
-    position: "relative",
-    zIndex: 5,
+    width: 110, height: 110, borderRadius: 55,
+    marginBottom: 14, position: "relative", zIndex: 5,
   },
   avatarImage: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    borderWidth: 3,
-    borderColor: "#fff",
+    width: 110, height: 110, borderRadius: 55,
+    borderWidth: 3, borderColor: "#fff",
   },
   avatarPlaceholder: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
+    width: 110, height: 110, borderRadius: 55,
     backgroundColor: "rgba(255,255,255,0.2)",
-    borderWidth: 3,
-    borderColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
+    borderWidth: 3, borderColor: "#fff",
+    alignItems: "center", justifyContent: "center",
   },
   avatarPlaceholderIcon: { fontSize: 40 },
   uploadBadge: {
-    position: "absolute",
-    bottom: 4,
-    right: 4,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    position: "absolute", bottom: 4, right: 4,
+    width: 30, height: 30, borderRadius: 15,
     backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: "center", justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 3,
+    shadowOpacity: 0.2, shadowRadius: 2, elevation: 3,
   },
 
   headerNome: {
     fontSize: 22,
     fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-    color: "#fff",
-    fontWeight: "700",
-    marginBottom: 4,
-    zIndex: 5,
+    color: "#fff", fontWeight: "700", marginBottom: 4, zIndex: 5,
   },
   headerEmail: { fontSize: 13, color: "#f8d7da", zIndex: 5 },
 
-  // Body
   body: {
     marginTop: -24,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
     backgroundColor: ROSA_CLARO,
-    paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingHorizontal: 20, paddingTop: 24,
   },
 
-  // Card
   card: {
     backgroundColor: "#FDF6EE",
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 16,
-    borderWidth: 1.5,
-    borderColor: ROSA_BORDA,
+    borderRadius: 16, padding: 18, marginBottom: 16,
+    borderWidth: 1.5, borderColor: ROSA_BORDA,
     shadowColor: ROSA,
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOpacity: 0.07, shadowRadius: 10, elevation: 3,
   },
   cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
+    flexDirection: "row", justifyContent: "space-between",
+    alignItems: "center", marginBottom: 12,
   },
   cardTitulo: {
     fontSize: 15,
     fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-    fontWeight: "700",
-    color: ROSA,
+    fontWeight: "700", color: ROSA,
   },
-  editBtnWrap: {
-    padding: 4,
-  },
+  editBtnWrap: { padding: 4 },
 
-  // Linhas
   linha: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 4 },
   rotulo: { fontSize: 13, color: SUAVE, flex: 1 },
   valor: { fontSize: 14, fontWeight: "600", color: TEXTO, flex: 2, textAlign: "right" },
   divisor: { height: 1, backgroundColor: ROSA_BORDA, marginVertical: 6 },
   subTitulo: { fontSize: 13, color: SUAVE, marginBottom: 8, marginTop: 4 },
 
-  // Tags — borderRadius 10
   tagWrap: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 4 },
   tag: {
-    backgroundColor: ROSA_CLARO,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: ROSA_BORDA,
+    backgroundColor: ROSA_CLARO, borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 4,
+    borderWidth: 1, borderColor: ROSA_BORDA,
   },
   tagText: { fontSize: 12, color: ROSA, fontWeight: "500" },
 
   semDados: { fontSize: 14, color: SUAVE, textAlign: "center", paddingVertical: 8 },
 
-  // Botão deletar
   deletarBtn: {
-    backgroundColor: "#e05555",
-    borderRadius: 12,
-    paddingVertical: 15,
-    alignItems: "center",
-    marginBottom: 8,
+    backgroundColor: "#e05555", borderRadius: 12,
+    paddingVertical: 15, alignItems: "center", marginBottom: 8,
     shadowColor: "#900",
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOpacity: 0.2, shadowRadius: 6, elevation: 4,
   },
   deletarBtnText: { color: "#fff", fontSize: 15, fontWeight: "700", letterSpacing: 0.3 },
 
