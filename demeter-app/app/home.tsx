@@ -13,7 +13,7 @@ import {
   Modal,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import Navbar from "../components/Navbar";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -35,22 +35,6 @@ function getImagemSemana(semana: number): string {
   const numero = String(semana).padStart(2, "0");
   return `https://kfixoncmpzaeecxygabi.supabase.co/storage/v1/object/public/gestacional-imagens/semanas/semana_${numero}.png`;
 }
-
-const MENSAGENS_INTERROMPIDA = [
-  "Você não está sozinha. 🤍",
-  "Permita-se sentir. Cuidar de si mesma é um ato de amor.",
-  "Cada momento vivido foi único e especial.",
-  "Estamos aqui com você nesse momento difícil.",
-  "Sua força é maior do que você imagina. 💗",
-];
-
-const MENSAGENS_FINALIZADA = [
-  "Que jornada incrível você viveu! 🎉",
-  "Parabéns por cada passo dessa caminhada.",
-  "Um novo capítulo começa agora. 🌸",
-  "Você foi incrível durante toda essa jornada!",
-  "Desejamos toda a felicidade do mundo para você e seu bebê. 💛",
-];
 
 // ─── Hook carrossel ───────────────────────────────────────────────────────────
 function useFrasesLoop(semana: SemanaInfo | null) {
@@ -156,12 +140,149 @@ function AlertasModal({
   );
 }
 
+// ─── Tela Encerrada ───────────────────────────────────────────────────────────
+function TelaEncerrada({
+  status,
+  nome,
+}: {
+  status: "finalizada" | "interrompida";
+  nome: string;
+}) {
+  const router = useRouter();
+  const isFinalizada = status === "finalizada";
+
+  async function handleSair() {
+    const token = await AsyncStorage.getItem("auth_token");
+    await AsyncStorage.removeItem("auth_token");
+    await AsyncStorage.removeItem(`status_gestacao_${token}`);
+    router.replace("/login" as any);
+  }
+
+  async function handleFoiEngano() {
+    const token = await AsyncStorage.getItem("auth_token");
+    await AsyncStorage.removeItem(`status_gestacao_${token}`);
+    router.replace("/maeinfo" as any);
+  }
+
+  if (isFinalizada) {
+    return (
+      <View style={[encStyles.outer, { backgroundColor: ROSA_CLARO }]}>
+        <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
+        <ScrollView
+          contentContainerStyle={encStyles.scroll}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Avatar */}
+          <View style={[encStyles.avatarCircle, { borderColor: ROSA_BORDA }]}>
+            <Image
+              source={require("../assets/images/demeter.png")}
+              style={encStyles.avatarImage}
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* Título */}
+          <Text style={[encStyles.titulo, { color: ROSA }]}>
+            {`Parabéns, mamãe\n${nome}! 🎉`}
+          </Text>
+
+          {/* Card única frase */}
+          <View style={encStyles.cardFrase}>
+            <Text style={[encStyles.cardTexto, { color: TEXTO }]}>
+              Que jornada incrível você viveu! Parabéns por cada passo dessa caminhada.
+            </Text>
+          </View>
+
+          {/* Botões */}
+          <TouchableOpacity
+              style={[encStyles.btn, { backgroundColor: "#A3B18A" }]}
+            onPress={handleSair}
+            activeOpacity={0.85}
+          >
+            <Text style={[encStyles.btnTexto, { color: "#ffffff" }]}>Sair</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[encStyles.btn, { backgroundColor: "rgba(212, 71, 107, 0.76)" }]}
+            onPress={handleFoiEngano}
+            activeOpacity={0.85}
+          >
+            <Text style={[encStyles.btnTexto, { color: "#ffffff" }]}>
+              Foi um engano
+            </Text>
+          </TouchableOpacity>
+
+          <View style={{ height: 40 }} />
+        </ScrollView>
+
+        <Navbar current="home" />
+      </View>
+    );
+  }
+
+  // ── Interrompida ─────────────────────────────────────────────────────────────
+  return (
+    <View style={[encStyles.outer, { backgroundColor: "#747474" }]}>
+      <StatusBar barStyle="light-content" backgroundColor="#747474" />
+      <ScrollView
+        contentContainerStyle={encStyles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Avatar luto */}
+        <View style={[encStyles.avatarCircle, { borderColor: "#888888" }]}>
+          <Image
+            source={require("../assets/images/demeter_luto.png")}
+            style={encStyles.avatarImage}
+            resizeMode="contain"
+          />
+        </View>
+
+        {/* Título */}
+        <Text style={[encStyles.titulo, { color: "rgba(0,0,0,0.63)" }]}>
+          Estamos com você! 🤍
+        </Text>
+
+        {/* Card única frase */}
+        <View style={[encStyles.cardFrase, { backgroundColor: "#5E5E5E" }]}>
+          <Text style={[encStyles.cardTexto, { color: "#000000" }]}>
+            Você não está sozinha. Estamos aqui com você nesse momento difícil.
+          </Text>
+        </View>
+
+        {/* Botões */}
+        <TouchableOpacity
+          style={[encStyles.btn, { backgroundColor: "#ffffff" }]}
+          onPress={handleSair}
+          activeOpacity={0.85}
+        >
+          <Text style={[encStyles.btnTexto, { color: "#000000" }]}>Sair</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[encStyles.btn, { backgroundColor: "rgba(0, 0, 0, 0.63)" }]}
+          onPress={handleFoiEngano}
+          activeOpacity={0.85}
+        >
+          <Text style={[encStyles.btnTexto, { color: "#ffffff" }]}>
+            Foi um engano
+          </Text>
+        </TouchableOpacity>
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+
+      <Navbar current="home" />
+    </View>
+  );
+}
+
 // ─── Tela principal ───────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const [semana, setSemana] = useState<SemanaInfo | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [statusGestacao, setStatusGestacao] = useState<"finalizada" | "interrompida" | null>(null);
+  const [nomeMae, setNomeMae] = useState<string>("");
   const [alertasVisivel, setAlertasVisivel] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -189,7 +310,20 @@ export default function HomeScreen() {
         const token = await AsyncStorage.getItem("auth_token");
         const status = await AsyncStorage.getItem(`status_gestacao_${token}`);
         if (status === "finalizada" || status === "interrompida") {
-          setStatusGestacao(status);
+          // Busca o nome da mãe
+          try {
+            const response = await fetch(`${API_URL}/api/mae/info`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json",
+              },
+            });
+            const json = await response.json();
+            setNomeMae(json?.nome ?? "");
+          } catch {
+            setNomeMae("");
+          }
+          setStatusGestacao(status as "finalizada" | "interrompida");
           setCarregando(false);
         } else {
           setStatusGestacao(null);
@@ -226,27 +360,7 @@ export default function HomeScreen() {
 
   // ── Tela encerrada ─────────────────────────────────────────────────────────
   if (statusGestacao) {
-    const mensagens =
-      statusGestacao === "finalizada" ? MENSAGENS_FINALIZADA : MENSAGENS_INTERROMPIDA;
-    return (
-      <View style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
-        <ScrollView contentContainerStyle={styles.scrollEncerrado} showsVerticalScrollIndicator={false}>
-          <Text style={styles.emojiEncerrado}>
-            {statusGestacao === "finalizada" ? "🎉" : "🤍"}
-          </Text>
-          <Text style={styles.tituloEncerrado}>
-            {statusGestacao === "finalizada" ? "Parabéns, mamãe!" : "Estamos com você"}
-          </Text>
-          {mensagens.map((msg, i) => (
-            <View key={i} style={styles.cardMensagem}>
-              <Text style={styles.textoMensagem}>{msg}</Text>
-            </View>
-          ))}
-        </ScrollView>
-        <Navbar current="home" />
-      </View>
-    );
+    return <TelaEncerrada status={statusGestacao} nome={nomeMae} />;
   }
 
   return (
@@ -286,7 +400,6 @@ export default function HomeScreen() {
           <>
             {/* ── Header ── */}
             <View style={styles.header}>
-              {/* ✅ Botão alerta descido com marginTop */}
               <View style={styles.headerLeft}>
                 <TouchableOpacity
                   style={styles.alertaBtn}
@@ -301,7 +414,6 @@ export default function HomeScreen() {
                 Semana {semana.semana_gestacional}
               </Text>
 
-              {/* ✅ Logo descida com marginTop */}
               <View style={styles.headerRight}>
                 <View style={styles.logoCircle}>
                   <Image
@@ -401,7 +513,86 @@ const ROSA_CIRCULO = "#e8a0b0";
 const CREME_CARD   = "#ffffff";
 const TEXTO        = "#9a6070";
 const SUAVE        = "#d4849a";
+const VERDE        = "#6b7c5c";
+const CINZA_BG     = "#6b6b6b";
+const CINZA_CARD   = "#555555";
 
+// ─── Estilos tela encerrada ───────────────────────────────────────────────────
+const encStyles = StyleSheet.create({
+  outer: {
+    flex: 1,
+  },
+  scroll: {
+    flexGrow: 1,
+    alignItems: "center",
+    paddingHorizontal: 28,
+    paddingTop: 120,
+    paddingBottom: 20,
+  },
+  avatarCircle: {
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: "transparent",
+    overflow: "hidden",
+    marginBottom: 20,
+    borderWidth: 2,
+  },
+  avatarImage: {
+    width: "180%",
+    height: "180%",
+    position: "absolute",
+    top: "-40%",
+    left: "-40%",
+  },
+  titulo: {
+    fontSize: 24,
+    fontFamily: "serif",
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 28,
+    lineHeight: 32,
+  },
+  // Card com dimensões 339x137 e sombra para destaque
+  cardFrase: {
+    width: 339,
+    height: 137,
+    borderRadius: 16,
+    backgroundColor: "#ffffff",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+    marginBottom: 28,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    elevation: 8,
+  },
+  cardTexto: {
+    fontSize: 20,
+    textAlign: "center",
+    lineHeight: 23,
+    fontFamily: "serif",
+  },
+  // Botões com dimensões 307x69
+  btn: {
+    width: 170,
+    height: 47,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+  },
+  btnTexto: {
+    fontSize: 16,
+    fontWeight: "700",
+    letterSpacing: 0.3,
+    color: "#ffffff",
+  },
+});
+
+// ─── Estilos tela principal ───────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: ROSA_CLARO },
   scroll: { flex: 1 },
@@ -411,34 +602,28 @@ const styles = StyleSheet.create({
   textoCarregando: { marginTop: 12, color: SUAVE, fontSize: 15 },
   textoErro: { color: ROSA, fontSize: 15, textAlign: "center" },
 
-  // ── Header
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 4,
-    paddingTop: 20,   // ✅ desce o header inteiro
+    paddingTop: 20,
     paddingBottom: 8,
   },
-
-  // ✅ Wrapper esquerdo com alinhamento ao centro-baixo
   headerLeft: {
     width: 44,
-  alignItems: "flex-start",
-  justifyContent: "flex-end",
-  paddingBottom: 0,
-  paddingTop: 10,
+    alignItems: "flex-start",
+    justifyContent: "flex-end",
+    paddingBottom: 0,
+    paddingTop: 10,
   },
-
-  // ✅ Wrapper direito com alinhamento ao centro-baixo
   headerRight: {
     width: 44,
-  alignItems: "flex-end",
-  justifyContent: "flex-end",
-  paddingBottom: 0,
-  paddingTop: 10,
+    alignItems: "flex-end",
+    justifyContent: "flex-end",
+    paddingBottom: 0,
+    paddingTop: 10,
   },
-
   alertaBtn: {
     width: 36,
     height: 36,
@@ -449,7 +634,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   alertaBtnTexto: { color: ROSA, fontSize: 18, fontWeight: "700", lineHeight: 22 },
-
   tituloSemana: {
     fontSize: 22,
     fontFamily: "serif",
@@ -458,7 +642,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     flex: 1,
   },
-
   logoCircle: {
     width: 44,
     height: 44,
@@ -476,7 +659,6 @@ const styles = StyleSheet.create({
     left: "-40%",
   },
 
-  // ── Hero círculo
   heroCircleWrap: { alignItems: "center", paddingVertical: 16 },
   heroCircle: {
     width: 220,
@@ -489,7 +671,6 @@ const styles = StyleSheet.create({
   },
   imagemSemana: { width: 175, height: 175 },
 
-  // ── Carrossel
   heroDesc: {
     textAlign: "center",
     paddingHorizontal: 28,
@@ -509,33 +690,32 @@ const styles = StyleSheet.create({
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: ROSA_BORDA },
   dotAtivo: { backgroundColor: ROSA },
 
-  // ── Cards
-card: {
-  backgroundColor: CREME_CARD,
-  borderRadius: 20,
-  padding: 18,
-  paddingTop: 8, // ✅ reduz o top pois o título já vem de cima
-  marginBottom: 14,
-  shadowColor: "#c47a8a",
-  shadowOffset: { width: 0, height: 6 },
-  shadowOpacity: 0.18,
-  shadowRadius: 12,
-  elevation: 6,
-},
+  card: {
+    backgroundColor: CREME_CARD,
+    borderRadius: 20,
+    padding: 18,
+    paddingTop: 8,
+    marginBottom: 14,
+    shadowColor: "#c47a8a",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 6,
+  },
   cardTituloWrap: {
-  backgroundColor: "#ffffff", // ✅ branco
-  borderRadius: 12,
-  paddingVertical: 10,
-  paddingHorizontal: 20,
-  alignSelf: "center",
-  marginBottom: 18,
-  marginTop: -30, // ✅ sobe o botão para fora do card
-  shadowColor: "#c47a8a",
-  shadowOffset: { width: 0, height: 3 },
-  shadowOpacity: 0.15,
-  shadowRadius: 8,
-  elevation: 5,
-},
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignSelf: "center",
+    marginBottom: 18,
+    marginTop: -30,
+    shadowColor: "#c47a8a",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
   cardTitulo: {
     fontSize: 20,
     fontFamily: "serif",
@@ -551,13 +731,6 @@ card: {
 
   alimentosRow: { flexDirection: "row", flexWrap: "wrap", gap: 12, justifyContent: "center", marginTop: 4 },
   alimentoItem: { fontSize: 14, color: ROSA, fontWeight: "600" },
-
-  // ── Tela encerrada
-  scrollEncerrado: { flexGrow: 1, alignItems: "center", paddingHorizontal: 24, paddingVertical: 60, paddingBottom: 100 },
-  emojiEncerrado: { fontSize: 64, marginBottom: 16 },
-  tituloEncerrado: { fontSize: 26, fontFamily: "serif", fontWeight: "700", color: ROSA, marginBottom: 28, textAlign: "center" },
-  cardMensagem: { width: "100%", backgroundColor: CREME_CARD, borderRadius: 20, padding: 18, marginBottom: 12, alignItems: "center" },
-  textoMensagem: { fontSize: 15, color: TEXTO, textAlign: "center", lineHeight: 22, fontFamily: "serif" },
 });
 
 // ─── Modal alertas ────────────────────────────────────────────────────────────
@@ -575,7 +748,7 @@ const modalStyles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 18,
     width: 300,
-    alignItems: "center", // ✅ centraliza tudo no modal
+    alignItems: "center",
   },
   titulo: {
     fontSize: 18,
@@ -588,7 +761,7 @@ const modalStyles = StyleSheet.create({
   alertRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center", // ✅ centraliza cada linha
+    justifyContent: "center",
     marginBottom: 8,
     width: "100%",
   },
@@ -601,7 +774,7 @@ const modalStyles = StyleSheet.create({
     color: "#ff6666",
     fontSize: 14,
     fontFamily: "serif",
-    textAlign: "center", // ✅ texto centralizado
+    textAlign: "center",
     flexShrink: 1,
   },
 });
