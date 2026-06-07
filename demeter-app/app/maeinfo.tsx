@@ -40,6 +40,7 @@ async function fetchMaeInfo(): Promise<MaeInfo> {
   return response.json();
 }
 
+// ─── Modal de status ──────────────────────────────────────────────────────────
 function StatusModal({
   visible,
   tipo,
@@ -73,20 +74,29 @@ function StatusModal({
     }
   }, [visible]);
 
-  const conteudo =
-    tipo === "finalizada"
-      ? {
-          emoji: "🎉",
-          titulo: "Parabéns!",
-          texto: "Que momento incrível! Sua jornada de gestação chegou ao fim. Desejamos toda saúde e felicidade para você e seu bebê!",
-          corIcone: "#6b7c5c",
-        }
-      : {
-          emoji: "🤍",
-          titulo: "Meus pêsames...",
-          texto: "Sentimos muito pelo que você está passando. Você não está sozinha. Cuide-se com muito carinho.",
-          corIcone: "#a0a0a0",
-        };
+  if (!tipo) return null;
+
+  const isFinalizada = tipo === "finalizada";
+
+  const conteudo = isFinalizada
+    ? {
+        emoji: "🎉",
+        titulo: "Parabéns!",
+        texto:
+          "Que momento incrível! Sua jornada de gestação chegou ao fim. Desejamos toda saúde e felicidade para você e seu bebê!",
+        circleColor: VERDE,
+        btnColor: ROSA,
+        btnTextoColor: CREME,
+      }
+    : {
+        emoji: "🖤",
+        titulo: "Meus pêsames...",
+        texto:
+          "Sentimos muito pelo que você está passando. Você não está sozinha. Cuide-se com muito carinho.",
+        circleColor: CINZA,
+        btnColor: CINZA,
+        btnTextoColor: CREME,
+      };
 
   return (
     <Modal
@@ -102,17 +112,25 @@ function StatusModal({
             { opacity: opacityAnim, transform: [{ scale: scaleAnim }] },
           ]}
         >
-          <View style={[modal.iconCircle, { backgroundColor: conteudo.corIcone }]}>
+          {/* Círculo com emoji */}
+          <View style={[modal.iconCircle, { backgroundColor: conteudo.circleColor }]}>
             <Text style={modal.iconEmoji}>{conteudo.emoji}</Text>
           </View>
-          <Text style={modal.titulo}>{conteudo.titulo}</Text>
+
+          <Text style={[modal.titulo, { color: isFinalizada ? ROSA : TEXTO }]}>
+            {conteudo.titulo}
+          </Text>
+
           <Text style={modal.texto}>{conteudo.texto}</Text>
+
           <TouchableOpacity
-            style={modal.btn}
+            style={[modal.btn, { backgroundColor: conteudo.btnColor }]}
             onPress={onClose}
             activeOpacity={0.8}
           >
-            <Text style={modal.btnTexto}>Fechar</Text>
+            <Text style={[modal.btnTexto, { color: conteudo.btnTextoColor }]}>
+              Fechar
+            </Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -120,6 +138,7 @@ function StatusModal({
   );
 }
 
+// ─── Tela principal ───────────────────────────────────────────────────────────
 export default function MaeInfoScreen() {
   const [dados, setDados] = useState<MaeInfo | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -159,18 +178,17 @@ export default function MaeInfoScreen() {
     }
   }
 
-  // ── Salva status no AsyncStorage e abre o modal ───────────────────────────
   async function salvarStatus(tipo: "finalizada" | "interrompida") {
-  const token = await AsyncStorage.getItem("auth_token");
-  await AsyncStorage.setItem(`status_gestacao_${token}`, tipo);
-  setModalTipo(tipo);
-}
+    const token = await AsyncStorage.getItem("auth_token");
+    await AsyncStorage.setItem(`status_gestacao_${token}`, tipo);
+    setModalTipo(tipo);
+  }
 
   if (carregando) {
     return (
       <View style={styles.centralizador}>
-        <StatusBar barStyle="dark-content" backgroundColor="#f8d7da" />
-        <ActivityIndicator size="large" color="#b5405a" />
+        <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
+        <ActivityIndicator size="large" color={ROSA} />
         <Text style={styles.textoCarregando}>Carregando suas informações...</Text>
       </View>
     );
@@ -179,7 +197,7 @@ export default function MaeInfoScreen() {
   if (erro || !dados) {
     return (
       <View style={styles.centralizador}>
-        <StatusBar barStyle="dark-content" backgroundColor="#f8d7da" />
+        <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
         <Text style={styles.textoErro}>{erro}</Text>
         <TouchableOpacity
           style={styles.btnTentar}
@@ -194,7 +212,7 @@ export default function MaeInfoScreen() {
 
   return (
     <View style={styles.outer}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8d7da" />
+      <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
 
       <StatusModal
         visible={modalTipo !== null}
@@ -212,6 +230,7 @@ export default function MaeInfoScreen() {
             { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
           ]}
         >
+          {/* Avatar */}
           <View style={styles.avatarCircle}>
             <Image
               source={require("../assets/images/demeter.png")}
@@ -336,38 +355,111 @@ export default function MaeInfoScreen() {
   );
 }
 
-const ROSA = "#b5405a";
+// ─── Cores ────────────────────────────────────────────────────────────────────
+const ROSA       = "#b5405a";
 const ROSA_CLARO = "#f8d7da";
 const ROSA_BORDA = "#e8c8d0";
-const CREME = "#f5f0e8";
+const CREME      = "#f5f0e8";
 const CREME_CARD = "#f0ead8";
-const TEXTO = "#3a1a22";
-const SUAVE = "#a07080";
-const VERDE = "#6b7c5c";
-const CINZA = "#a0a0a0";
+const TEXTO      = "#3a1a22";
+const SUAVE      = "#a07080";
+const VERDE      = "#6b7c5c";
+const CINZA      = "#888888";
 
+// ─── Estilos ──────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   outer: { flex: 1, backgroundColor: ROSA_CLARO },
   scroll: { flexGrow: 1, alignItems: "center", paddingVertical: 40, paddingHorizontal: 24 },
   container: { width: "100%", alignItems: "center" },
-  centralizador: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: ROSA_CLARO, padding: 24 },
+  centralizador: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: ROSA_CLARO,
+    padding: 24,
+  },
   textoCarregando: { marginTop: 12, color: SUAVE, fontSize: 15 },
   textoErro: { color: ROSA, fontSize: 15, textAlign: "center", marginBottom: 16 },
-  btnTentar: { backgroundColor: ROSA, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 28 },
+  btnTentar: {
+    backgroundColor: ROSA,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 28,
+  },
   btnTentarTexto: { color: CREME, fontWeight: "700", fontSize: 14 },
-  avatarCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: ROSA_CLARO, overflow: "hidden", marginBottom: 12, borderWidth: 2, borderColor: ROSA_BORDA },
-  avatarImage: { width: "180%", height: "180%", position: "absolute", top: "-40%", left: "-40%" },
-  tituloPagina: { fontSize: 28, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", color: ROSA, marginBottom: 4, letterSpacing: 0.4 },
+
+  avatarCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: ROSA_CLARO,
+    overflow: "hidden",
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: ROSA_BORDA,
+  },
+  avatarImage: {
+    width: "180%",
+    height: "180%",
+    position: "absolute",
+    top: "-40%",
+    left: "-40%",
+  },
+  tituloPagina: {
+    fontSize: 28,
+    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+    color: ROSA,
+    marginBottom: 4,
+    letterSpacing: 0.4,
+  },
   subtitulo: { fontSize: 15, color: SUAVE, marginBottom: 28 },
-  card: { width: "100%", backgroundColor: CREME_CARD, borderRadius: 16, padding: 20, marginBottom: 16, borderWidth: 1.5, borderColor: ROSA_BORDA, shadowColor: ROSA, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 4 },
-  cardTitulo: { fontSize: 15, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", fontWeight: "700", color: ROSA, marginBottom: 16 },
-  linha: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 2 },
+
+  card: {
+    width: "100%",
+    backgroundColor: CREME_CARD,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: ROSA_BORDA,
+    shadowColor: ROSA,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  cardTitulo: {
+    fontSize: 15,
+    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+    fontWeight: "700",
+    color: ROSA,
+    marginBottom: 16,
+  },
+  linha: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 2,
+  },
   rotulo: { fontSize: 13, color: SUAVE },
   valor: { fontSize: 15, fontWeight: "600", color: TEXTO },
   divisor: { height: 1, backgroundColor: ROSA_BORDA, marginVertical: 10 },
-  badge: { backgroundColor: ROSA_CLARO, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, borderWidth: 1, borderColor: ROSA_BORDA },
+  badge: {
+    backgroundColor: ROSA_CLARO,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: ROSA_BORDA,
+  },
   badgeTexto: { fontSize: 13, color: ROSA, fontWeight: "600" },
-  gridMetricas: { flexDirection: "row", justifyContent: "space-around", alignItems: "center", marginBottom: 4 },
+
+  gridMetricas: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    marginBottom: 4,
+  },
   metricaItem: { alignItems: "center", flex: 1 },
   metricaValor: { fontSize: 26, fontWeight: "700", color: ROSA },
   metricaUnidade: { fontSize: 13, color: SUAVE, marginTop: -2 },
@@ -375,25 +467,88 @@ const styles = StyleSheet.create({
   metricaSeparador: { width: 1, height: 44, backgroundColor: ROSA_BORDA },
   metricaDestaque: { fontSize: 26, fontWeight: "700", color: ROSA, marginTop: 2 },
   aguaValor: { fontSize: 22, fontWeight: "700", color: "#4a90d9", marginTop: 4 },
+
   textoSaude: { fontSize: 14, color: TEXTO, marginTop: 6, lineHeight: 20 },
   tagsContainer: { flexDirection: "row", flexWrap: "wrap", marginTop: 8, gap: 8 },
-  tag: { backgroundColor: ROSA_CLARO, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, borderWidth: 1, borderColor: ROSA_BORDA },
+  tag: {
+    backgroundColor: ROSA_CLARO,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: ROSA_BORDA,
+  },
   tagTexto: { fontSize: 13, color: ROSA, fontWeight: "500" },
+
   labelBotoes: { fontSize: 13, color: SUAVE, marginBottom: 12, marginTop: 4 },
-  btn: { width: "100%", borderRadius: 10, paddingVertical: 15, alignItems: "center", marginBottom: 12, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 6, elevation: 4 },
+  btn: {
+    width: "100%",
+    borderRadius: 10,
+    paddingVertical: 15,
+    alignItems: "center",
+    marginBottom: 12,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
+  },
   btnFinalizada: { backgroundColor: VERDE, shadowColor: "#3a4a2c" },
   btnInterrompida: { backgroundColor: CINZA, shadowColor: "#333" },
   btnTexto: { fontSize: 15, fontWeight: "700", color: CREME, letterSpacing: 0.3 },
+
   navbarWrap: { position: "absolute", bottom: 0, left: 0, right: 0 },
 });
 
+// ─── Modal ────────────────────────────────────────────────────────────────────
 const modal = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: "rgba(58, 26, 34, 0.45)", justifyContent: "center", alignItems: "center", paddingHorizontal: 32 },
-  box: { backgroundColor: "#fdf6f0", borderRadius: 20, padding: 28, width: "100%", alignItems: "center", borderWidth: 1.5, borderColor: ROSA_BORDA, shadowColor: "#3a1a22", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 16, elevation: 10 },
-  iconCircle: { width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center", marginBottom: 14 },
-  iconEmoji: { fontSize: 30 },
-  titulo: { fontSize: 20, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", fontWeight: "700", color: ROSA, marginBottom: 10, textAlign: "center" },
-  texto: { fontSize: 14, color: TEXTO, textAlign: "center", lineHeight: 21, marginBottom: 24 },
-  btn: { backgroundColor: ROSA, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 40 },
-  btnTexto: { color: CREME, fontSize: 15, fontWeight: "700", letterSpacing: 0.3 },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(58, 26, 34, 0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+  },
+  box: {
+    backgroundColor: "#fdf6f0",
+    borderRadius: 20,
+    padding: 28,
+    width: "100%",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: ROSA_BORDA,
+    shadowColor: "#3a1a22",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+  iconEmoji: { fontSize: 36 },
+  titulo: {
+    fontSize: 22,
+    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+    fontWeight: "700",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  texto: {
+    fontSize: 14,
+    color: TEXTO,
+    textAlign: "center",
+    lineHeight: 21,
+    marginBottom: 24,
+  },
+  btn: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 60,
+  },
+  btnTexto: { fontSize: 16, fontWeight: "700", letterSpacing: 0.3 },
 });
