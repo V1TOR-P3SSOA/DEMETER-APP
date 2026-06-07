@@ -71,13 +71,66 @@ const cb = StyleSheet.create({
   label: { fontSize: 14, color: "#3a1a22", flex: 1 },
 });
 
+function SuccessToast({ visible }: { visible: boolean }) {
+  const translateY = useRef(new Animated.Value(-80)).current;
+  const opacity    = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.spring(translateY, { toValue: 0, useNativeDriver: true, damping: 18, stiffness: 200 }),
+        Animated.timing(opacity, { toValue: 1, duration: 250, useNativeDriver: true }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(translateY, { toValue: -80, duration: 300, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [visible]);
+
+  return (
+    <Animated.View style={[toast.container, { transform: [{ translateY }], opacity }]} pointerEvents="none">
+      <View style={toast.iconWrap}>
+        <Text style={toast.icon}>✓</Text>
+      </View>
+      <View>
+        <Text style={toast.title}>Formulário salvo!</Text>
+        <Text style={toast.sub}>Suas informações foram atualizadas.</Text>
+      </View>
+    </Animated.View>
+  );
+}
+
+const toast = StyleSheet.create({
+  container: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 54 : 16,
+    left: 16, right: 16, zIndex: 999,
+    backgroundColor: "#2d5a3d",
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14, paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18, shadowRadius: 10,
+    elevation: 8, gap: 12,
+  },
+  iconWrap: { width: 32, height: 32, borderRadius: 16, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" },
+  icon:  { color: "#fff", fontSize: 16, fontWeight: "800" },
+  title: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  sub:   { color: "rgba(255,255,255,0.75)", fontSize: 12, marginTop: 1 },
+});
+
 // ─── Tela ─────────────────────────────────────────────────────────────────────
 export default function EditarFormularioScreen() {
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const [loading, setLoading]   = useState(true);
-  const [saving, setSaving]     = useState(false);
+  const [saving, setSaving]       = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   const [idade, setIdade]                     = useState("");
   const [semanas, setSemanas]                 = useState("");
@@ -128,6 +181,11 @@ export default function EditarFormularioScreen() {
     }
   }
 
+  function dispararToast() {
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  }
+
   async function handleSalvar() {
     if (!idade || !semanas || !primeiraGestacao || !tipoGestacao || !altura || !peso) {
       Alert.alert("Atenção", "Preencha todos os campos obrigatórios.");
@@ -165,9 +223,9 @@ export default function EditarFormularioScreen() {
         throw new Error(data.message || "Erro ao salvar.");
       }
 
-      Alert.alert("Salvo!", "Formulário atualizado com sucesso.", [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+      dispararToast();
+      await carregarFormulario();
+
     } catch (err: any) {
       Alert.alert("Erro", err.message);
     } finally {
@@ -190,6 +248,8 @@ export default function EditarFormularioScreen() {
       behavior="padding"
     >
       <StatusBar barStyle="dark-content" backgroundColor="#f8d7da" />
+      <SuccessToast visible={showToast} />
+      
       <ScrollView
         contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}
