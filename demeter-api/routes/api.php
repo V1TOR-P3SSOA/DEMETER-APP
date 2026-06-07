@@ -18,6 +18,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Perfil do usuário
     Route::get('/perfil',   [PerfilController::class, 'show']);
     Route::patch('/perfil', [PerfilController::class, 'update']);
+    Route::post('/perfil/foto',  [PerfilController::class, 'uploadFoto']);
+    Route::delete('/perfil',     [PerfilController::class, 'destroy']);
 
     // Informações da mãe
     Route::get('/mae/info', [MaeInfoController::class, 'show']);
