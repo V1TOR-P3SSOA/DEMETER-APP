@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   View, Text, FlatList, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert,
+  StyleSheet, ActivityIndicator, Alert, StatusBar,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -60,12 +60,26 @@ export default function AdminReceitasScreen() {
   };
 
   if (loading) {
-    return <View style={styles.center}><ActivityIndicator size="large" /></View>;
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={ROSA} />
+      </View>
+    );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Receitas</Text>
+      <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
+
+      <Text style={styles.title}>Receitas{"\n"}cadastradas</Text>
+
+      <TouchableOpacity
+        style={styles.btnNovo}
+        onPress={() => router.push("/admin/create_receita" as any)}
+      >
+        <Text style={styles.btnNovoText}>+ Cadastrar nova receita</Text>
+      </TouchableOpacity>
+
       <FlatList
         data={receitas}
         keyExtractor={(item) => String(item.id)}
@@ -73,7 +87,18 @@ export default function AdminReceitasScreen() {
           <View style={styles.card}>
             <View style={styles.cardInfo}>
               <Text style={styles.cardNome}>{item.nome}</Text>
-              <Text style={styles.cardSub}>{item.tipos_refeicoes} · {item.tempo}</Text>
+              <View style={styles.tagsContainer}>
+                {item.tipos_refeicoes?.split(",").map((tag, i) => (
+                  <View key={i} style={styles.tag}>
+                    <Text style={styles.tagTexto}>{tag.trim()}</Text>
+                  </View>
+                ))}
+                {item.tempo ? (
+                  <View style={styles.tag}>
+                    <Text style={styles.tagTexto}>{item.tempo}</Text>
+                  </View>
+                ) : null}
+              </View>
             </View>
             <View style={styles.cardActions}>
               <TouchableOpacity
@@ -95,32 +120,90 @@ export default function AdminReceitasScreen() {
           <Text style={styles.vazio}>Nenhuma receita cadastrada.</Text>
         }
         contentContainerStyle={{ paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );
 }
 
+const ROSA        = "#b5405a";
+const ROSA_CLARO  = "#fce8ed";
+const ROSA_BORDA  = "#e8b0be";
+const ROSA_TAG    = "#fce8ed";
+const TEXTO       = "#9a6070";
+
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24 },
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  title: { fontSize: 24, fontWeight: "700", marginBottom: 20 },
+  container: { flex: 1, backgroundColor: ROSA_CLARO, paddingHorizontal: 20, paddingTop: 20 },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: ROSA_CLARO },
+
+  title: {
+    fontSize: 32,
+    fontWeight: "700",
+    fontFamily: "serif",
+    color: ROSA,
+    lineHeight: 38,
+    marginBottom: 16,
+  },
+
+  btnNovo: {
+    backgroundColor: ROSA,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginBottom: 20,
+    shadowColor: ROSA,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  btnNovoText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+
   card: {
-    borderWidth: 1, borderColor: "#ccc", borderRadius: 8,
-    padding: 14, marginBottom: 12,
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    marginBottom: 14,
+    overflow: "hidden",
+    shadowColor: ROSA,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  cardInfo: { marginBottom: 10 },
-  cardNome: { fontSize: 16, fontWeight: "600" },
-  cardSub: { fontSize: 12, color: "#888", marginTop: 2 },
-  cardActions: { flexDirection: "row", gap: 8 },
+
+  cardInfo: { padding: 14, paddingBottom: 10 },
+  cardNome: {
+    fontSize: 18,
+    fontWeight: "700",
+    fontFamily: "serif",
+    color: ROSA,
+    lineHeight: 24,
+    marginBottom: 10,
+  },
+
+  tagsContainer: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  tag: {
+    backgroundColor: ROSA_TAG,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: ROSA_BORDA,
+  },
+  tagTexto: { fontSize: 12, color: ROSA, fontWeight: "500" },
+
+  cardActions: { flexDirection: "row", gap: 8, paddingHorizontal: 14, paddingBottom: 14, paddingTop: 4 },
   btnEditar: {
-    flex: 1, padding: 8, borderRadius: 6,
-    backgroundColor: "#6b7c5c", alignItems: "center",
+    flex: 1, paddingVertical: 9, borderRadius: 10,
+    backgroundColor: "#fff", borderWidth: 1.5, borderColor: ROSA_BORDA,
+    alignItems: "center",
   },
-  btnEditarText: { color: "#fff", fontWeight: "600" },
+  btnEditarText: { color: ROSA, fontWeight: "600", fontSize: 13 },
   btnDeletar: {
-    flex: 1, padding: 8, borderRadius: 6,
-    backgroundColor: "#b5405a", alignItems: "center",
+    flex: 1, paddingVertical: 9, borderRadius: 10,
+    backgroundColor: ROSA, alignItems: "center",
   },
-  btnDeletarText: { color: "#fff", fontWeight: "600" },
-  vazio: { textAlign: "center", color: "#888", marginTop: 40 },
+  btnDeletarText: { color: "#fff", fontWeight: "600", fontSize: 13 },
+
+  vazio: { textAlign: "center", color: TEXTO, marginTop: 40, fontSize: 14 },
 });

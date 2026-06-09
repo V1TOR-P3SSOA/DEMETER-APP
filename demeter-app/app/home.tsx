@@ -186,7 +186,7 @@ function TelaEncerrada({
             {`Parabéns, mamãe\n${nome}! 🎉`}
           </Text>
 
-          {/* Card única frase */}
+          {/* Card */}
           <View style={encStyles.cardFrase}>
             <Text style={[encStyles.cardTexto, { color: TEXTO }]}>
               Que jornada incrível você viveu! Parabéns por cada passo dessa caminhada.
@@ -195,7 +195,7 @@ function TelaEncerrada({
 
           {/* Botões */}
           <TouchableOpacity
-              style={[encStyles.btn, { backgroundColor: "#A3B18A" }]}
+            style={[encStyles.btn, { backgroundColor: "#A3B18A" }]}
             onPress={handleSair}
             activeOpacity={0.85}
           >
@@ -214,8 +214,7 @@ function TelaEncerrada({
 
           <View style={{ height: 40 }} />
         </ScrollView>
-
-        <Navbar current="home" />
+        {/* ← Navbar removida intencionalmente */}
       </View>
     );
   }
@@ -242,7 +241,7 @@ function TelaEncerrada({
           Estamos com você! 🤍
         </Text>
 
-        {/* Card única frase */}
+        {/* Card */}
         <View style={[encStyles.cardFrase, { backgroundColor: "#5E5E5E" }]}>
           <Text style={[encStyles.cardTexto, { color: "#000000" }]}>
             Você não está sozinha. Estamos aqui com você nesse momento difícil.
@@ -270,8 +269,7 @@ function TelaEncerrada({
 
         <View style={{ height: 40 }} />
       </ScrollView>
-
-      <Navbar current="home" />
+      {/* ← Navbar removida intencionalmente */}
     </View>
   );
 }
@@ -310,7 +308,6 @@ export default function HomeScreen() {
         const token = await AsyncStorage.getItem("auth_token");
         const status = await AsyncStorage.getItem(`status_gestacao_${token}`);
         if (status === "finalizada" || status === "interrompida") {
-          // Busca o nome da mãe
           try {
             const response = await fetch(`${API_URL}/api/mae/info`, {
               headers: {
@@ -553,7 +550,6 @@ const encStyles = StyleSheet.create({
     marginBottom: 28,
     lineHeight: 32,
   },
-  // Card com dimensões 339x137 e sombra para destaque
   cardFrase: {
     width: 339,
     height: 137,
@@ -575,7 +571,6 @@ const encStyles = StyleSheet.create({
     lineHeight: 23,
     fontFamily: "serif",
   },
-  // Botões com dimensões 307x69
   btn: {
     width: 170,
     height: 47,
