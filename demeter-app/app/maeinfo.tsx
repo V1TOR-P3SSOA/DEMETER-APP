@@ -14,6 +14,7 @@ import {
   Image,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router"; // ← adicionado
 import Navbar from "../components/Navbar";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -45,10 +46,12 @@ function StatusModal({
   visible,
   tipo,
   onClose,
+  onEngano, // ← adicionado
 }: {
   visible: boolean;
   tipo: "finalizada" | "interrompida" | null;
   onClose: () => void;
+  onEngano: () => void; // ← adicionado
 }) {
   const scaleAnim = useRef(new Animated.Value(0.85)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -99,38 +102,29 @@ function StatusModal({
       };
 
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="none"
-      onRequestClose={onClose}
-    >
-      <View style={modal.overlay}>
+    <Modal transparent visible={visible} animationType="none" onRequestClose={onClose}>
+      <View style={al.overlay}>
         <Animated.View
-          style={[
-            modal.box,
-            { opacity: opacityAnim, transform: [{ scale: scaleAnim }] },
-          ]}
+          style={[al.box, { opacity: opacityAnim, transform: [{ scale: scaleAnim }] }]}
         >
-          {/* Círculo com emoji */}
-          <View style={[modal.iconCircle, { backgroundColor: conteudo.circleColor }]}>
-            <Text style={modal.iconEmoji}>{conteudo.emoji}</Text>
+          <View style={[al.iconCircle, isFinalizada ? al.iconCircleError : al.iconCircleWarn]}>
+            <Text style={al.iconEmoji}>{conteudo.emoji}</Text>
           </View>
+          <Text style={al.title}>{conteudo.titulo}</Text>
+          <Text style={al.message}>{conteudo.texto}</Text>
 
-          <Text style={[modal.titulo, { color: isFinalizada ? ROSA : TEXTO }]}>
-            {conteudo.titulo}
-          </Text>
+          {/* Botão principal — confirma e vai para home */}
+          <TouchableOpacity style={[al.btn, { backgroundColor: conteudo.btnColor }]} onPress={onClose} activeOpacity={0.8}>
+            <Text style={[al.btnText, { color: conteudo.btnTextoColor }]}>Confirmar</Text>
+          </TouchableOpacity>
 
-          <Text style={modal.texto}>{conteudo.texto}</Text>
-
+          {/* Botão secundário — cancela e limpa o status */}
           <TouchableOpacity
-            style={[modal.btn, { backgroundColor: conteudo.btnColor }]}
-            onPress={onClose}
+            style={[al.btn, al.btnEngano]}
+            onPress={onEngano}
             activeOpacity={0.8}
           >
-            <Text style={[modal.btnTexto, { color: conteudo.btnTextoColor }]}>
-              Fechar
-            </Text>
+            <Text style={[al.btnText, { color: SUAVE }]}>Foi um engano</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -138,8 +132,73 @@ function StatusModal({
   );
 }
 
-// ─── Tela principal ───────────────────────────────────────────────────────────
+const al = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(58, 26, 34, 0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+  },
+  box: {
+    backgroundColor: "#fdf6f0",
+    borderRadius: 20,
+    padding: 28,
+    width: "100%",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "#e8c8d0",
+    shadowColor: "#3a1a22",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  iconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+  },
+  iconCircleError: { backgroundColor: "#6b7c5c" },
+  iconCircleWarn: { backgroundColor: "#888888" },
+  iconEmoji: { fontSize: 26 },
+  title: {
+    fontSize: 18,
+    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+    fontWeight: "700",
+    color: "#b5405a",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  message: {
+    fontSize: 14,
+    color: "#3a1a22",
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 6,
+  },
+  btn: {
+    marginTop: 14,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    width: "100%",
+    alignItems: "center",
+  },
+  btnEngano: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: "#d4a0aa",
+  },
+  btnText: { fontSize: 15, fontWeight: "700", letterSpacing: 0.3 },
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function MaeInfoScreen() {
+  const router = useRouter(); // ← adicionado
   const [dados, setDados] = useState<MaeInfo | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -184,6 +243,13 @@ export default function MaeInfoScreen() {
     setModalTipo(tipo);
   }
 
+  // ← handler do "Foi um engano": limpa o status salvo e fecha o modal
+  async function handleEngano() {
+    const token = await AsyncStorage.getItem("auth_token");
+    await AsyncStorage.removeItem(`status_gestacao_${token}`);
+    setModalTipo(null);
+  }
+
   if (carregando) {
     return (
       <View style={styles.centralizador}>
@@ -217,7 +283,11 @@ export default function MaeInfoScreen() {
       <StatusModal
         visible={modalTipo !== null}
         tipo={modalTipo}
-        onClose={() => setModalTipo(null)}
+        onClose={() => {
+          setModalTipo(null);
+          router.replace("/home" as any); // ← redireciona para home ao confirmar
+        }}
+        onEngano={handleEngano} // ← limpa status e fecha modal
       />
 
       <ScrollView
@@ -497,58 +567,4 @@ const styles = StyleSheet.create({
   btnTexto: { fontSize: 15, fontWeight: "700", color: CREME, letterSpacing: 0.3 },
 
   navbarWrap: { position: "absolute", bottom: 0, left: 0, right: 0 },
-});
-
-// ─── Modal ────────────────────────────────────────────────────────────────────
-const modal = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(58, 26, 34, 0.45)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-  },
-  box: {
-    backgroundColor: "#fdf6f0",
-    borderRadius: 20,
-    padding: 28,
-    width: "100%",
-    alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: ROSA_BORDA,
-    shadowColor: "#3a1a22",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    elevation: 10,
-  },
-  iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 16,
-  },
-  iconEmoji: { fontSize: 36 },
-  titulo: {
-    fontSize: 22,
-    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-    fontWeight: "700",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  texto: {
-    fontSize: 14,
-    color: TEXTO,
-    textAlign: "center",
-    lineHeight: 21,
-    marginBottom: 24,
-  },
-  btn: {
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 60,
-  },
-  btnTexto: { fontSize: 16, fontWeight: "700", letterSpacing: 0.3 },
 });
