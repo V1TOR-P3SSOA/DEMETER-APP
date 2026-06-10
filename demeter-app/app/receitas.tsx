@@ -300,7 +300,7 @@ export default function ReceitasScreen() {
     fetchReceitas();
   };
 
-  const temFiltrosAtivos = Object.values(filtrosAtivos).some((v) => v) || search.trim();
+  const temFiltrosAtivos = Object.values(filtrosAtivos).some((v) => v) || !!search.trim();
 
   const openModal = (receita: Receita) => { setSelected(receita); setModalVisible(true); };
   const closeModal = () => { setModalVisible(false); setSelected(null); };
@@ -359,29 +359,30 @@ export default function ReceitasScreen() {
           </TouchableOpacity>
         </ScrollView>
       )}
-
-      {loading ? (
-        <ActivityIndicator size="large" color="#b5405a" style={{ marginTop: 40 }} />
-      ) : receitas.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyText}>Nenhuma receita encontrada.</Text>
-          {temFiltrosAtivos && (
-            <TouchableOpacity onPress={handleLimparTudo}>
-              <Text style={styles.limparLink}>Limpar filtros</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      ) : (
-        <FlatList
-          data={receitas}
-          keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <ReceitaCard receita={item} onPress={() => openModal(item)} />
-          )}
-        />
-      )}
+      <View style={{ flex: 1 }}>
+        {loading ? (
+          <ActivityIndicator size="large" color="#b5405a" style={{ marginTop: 40 }} />
+        ) : receitas.length === 0 ? (
+          <View style={styles.empty}>
+            <Text style={styles.emptyText}>Nenhuma receita encontrada.</Text>
+            {temFiltrosAtivos && (
+              <TouchableOpacity onPress={handleLimparTudo}>
+                <Text style={styles.limparLink}>Limpar filtros</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : (
+          <FlatList
+            data={receitas}
+            keyExtractor={(item) => String(item.id)}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <ReceitaCard receita={item} onPress={() => openModal(item)} />
+            )}
+          />
+        )}
+      </View>
 
       <Navbar current="receitas" />
       <ReceitaModal receita={selected} visible={modalVisible} onClose={closeModal} />

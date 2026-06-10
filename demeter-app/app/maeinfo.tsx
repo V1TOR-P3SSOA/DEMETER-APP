@@ -251,30 +251,32 @@ export default function MaeInfoScreen() {
   }
 
   if (carregando) {
-    return (
-      <View style={styles.centralizador}>
-        <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
-        <ActivityIndicator size="large" color={ROSA} />
-        <Text style={styles.textoCarregando}>Carregando suas informações...</Text>
+  return (
+    <View style={styles.centralizador}>
+      <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
+      <ActivityIndicator size="large" color={ROSA} />
+      <Text style={styles.textoCarregando}>Carregando suas informações...</Text>
+      <View style={styles.navbarWrap}>
+        <Navbar current="sobrevoce" />
       </View>
-    );
-  }
+    </View>
+  );
+}
 
-  if (erro || !dados) {
-    return (
-      <View style={styles.centralizador}>
-        <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
-        <Text style={styles.textoErro}>{erro}</Text>
-        <TouchableOpacity
-          style={styles.btnTentar}
-          onPress={carregarDados}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.btnTentarTexto}>Tentar novamente</Text>
-        </TouchableOpacity>
+if (erro || !dados) {
+  return (
+    <View style={styles.centralizador}>
+      <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
+      <Text style={styles.textoErro}>{erro}</Text>
+      <TouchableOpacity style={styles.btnTentar} onPress={carregarDados} activeOpacity={0.85}>
+        <Text style={styles.btnTentarTexto}>Tentar novamente</Text>
+      </TouchableOpacity>
+      <View style={styles.navbarWrap}>
+        <Navbar current="sobrevoce" />
       </View>
-    );
-  }
+    </View>
+  );
+}
 
   return (
     <View style={styles.outer}>
