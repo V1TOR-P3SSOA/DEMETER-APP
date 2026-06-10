@@ -670,7 +670,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: 28,
     color: ROSA,
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: "500",
     lineHeight: 22,
     minHeight: 66,
@@ -725,7 +725,7 @@ const styles = StyleSheet.create({
   starIcon: { color: ROSA, fontSize: 16, marginTop: 1 },
 
   alimentosRow: { flexDirection: "row", flexWrap: "wrap", gap: 12, justifyContent: "center", marginTop: 4 },
-  alimentoItem: { fontSize: 14, color: ROSA, fontWeight: "600" },
+  alimentoItem: { fontSize: 17, color: ROSA, fontWeight: "600" },
 });
 
 // ─── Modal alertas ────────────────────────────────────────────────────────────
@@ -767,7 +767,7 @@ const modalStyles = StyleSheet.create({
   },
   alertText: {
     color: "#ff6666",
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: "serif",
     textAlign: "center",
     flexShrink: 1,
