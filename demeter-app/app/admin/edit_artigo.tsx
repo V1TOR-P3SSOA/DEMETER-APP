@@ -110,10 +110,24 @@ export default function EditArtigoScreen() {
       <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        <TouchableOpacity onPress={() => router.back()} style={styles.backRow}>
-          <Text style={styles.backIcon}>‹</Text>
-        </TouchableOpacity>
+        {/* ── Cabeçalho: seta + logo ── */}
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backBtn}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Text style={styles.backIcon}>‹</Text>
+          </TouchableOpacity>
 
+          <Image
+            source={require("../../assets/images/demeter.png")}
+            style={{ width: 100, height: 100, opacity: 0.9 }}
+            resizeMode="contain"
+          />
+        </View>
+
+        {/* ── Título centralizado ── */}
         <Text style={styles.title}>Editar{"\n"}artigo</Text>
 
         <View style={styles.formCard}>
@@ -172,7 +186,8 @@ export default function EditArtigoScreen() {
   );
 }
 
-const ROSA             = "#b5405a";
+const ROSA             = "#D4476B";
+const ROSAd            = "#e0849a";
 const ROSA_CLARO       = "#fce8ed";
 const ROSA_BORDA       = "#e8a0b0";
 const ROSA_PLACEHOLDER = "#d4a0b0";
@@ -182,18 +197,37 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: ROSA_CLARO },
   scroll: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 60 },
 
-  backRow: { marginBottom: 4 },
-  backIcon: { fontSize: 32, color: ROSA, fontWeight: "300", lineHeight: 36 },
+  // ── Cabeçalho ─────────────────────────────────────────────────────────────
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: 16,
+    marginBottom: 0,
+  },
+  backBtn: {
+    padding: 8,
+  },
+  backIcon: {
+    fontSize: 52,
+    color: ROSA,
+    fontWeight: "300",
+    lineHeight: 56,
+  },
 
+  // ── Título centralizado ────────────────────────────────────────────────────
   title: {
     fontSize: 34,
     fontWeight: "700",
     fontFamily: "serif",
     color: ROSA,
     lineHeight: 40,
-    marginBottom: 24,
+    textAlign: "center",
+    marginTop: -70,
+    marginBottom: 14,
   },
 
+  // ── Formulário ─────────────────────────────────────────────────────────────
   formCard: {
     backgroundColor: "#fff8f9",
     borderRadius: 24,
@@ -253,16 +287,23 @@ const styles = StyleSheet.create({
 
   textArea: { height: 280, textAlignVertical: "top" },
 
+  // ── Botão atualizar (mesma cor do "Novo artigo") ───────────────────────────
   btn: {
-    backgroundColor: ROSA,
-    borderRadius: 50,
-    paddingVertical: 16,
+    backgroundColor: ROSAd,
+    borderRadius: 14,
+    paddingVertical: 15,
     alignItems: "center",
     shadowColor: ROSA,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 4,
   },
-  btnText: { color: "#fff", fontSize: 17, fontWeight: "700", fontFamily: "serif" },
+  btnText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "700",
+    fontFamily: "serif",
+    letterSpacing: 0.2,
+  },
 });
