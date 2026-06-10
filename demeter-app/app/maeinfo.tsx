@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     letterSpacing: 0.4,
   },
-  subtitulo: { fontSize: 15, color: SUAVE, marginBottom: 28 },
+  subtitulo: { fontSize: 18, color: SUAVE, marginBottom: 28 },
 
   card: {
     width: "100%",
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   cardTitulo: {
-    fontSize: 15,
+    fontSize: 18,
     fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
     fontWeight: "700",
     color: ROSA,
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 2,
   },
-  rotulo: { fontSize: 13, color: SUAVE },
+  rotulo: { fontSize: 16, color: SUAVE },
   valor: { fontSize: 15, fontWeight: "600", color: TEXTO },
   divisor: { height: 1, backgroundColor: ROSA_BORDA, marginVertical: 10 },
   badge: {
@@ -533,14 +533,14 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   metricaItem: { alignItems: "center", flex: 1 },
-  metricaValor: { fontSize: 26, fontWeight: "700", color: ROSA },
+  metricaValor: { fontSize: 28, fontWeight: "700", color: ROSA },
   metricaUnidade: { fontSize: 13, color: SUAVE, marginTop: -2 },
   metricaRotulo: { fontSize: 12, color: SUAVE, marginTop: 4 },
   metricaSeparador: { width: 1, height: 44, backgroundColor: ROSA_BORDA },
   metricaDestaque: { fontSize: 26, fontWeight: "700", color: ROSA, marginTop: 2 },
-  aguaValor: { fontSize: 22, fontWeight: "700", color: "#4a90d9", marginTop: 4 },
+  aguaValor: { fontSize: 26, fontWeight: "700", color: "#4a90d9", marginTop: 4 },
 
-  textoSaude: { fontSize: 14, color: TEXTO, marginTop: 6, lineHeight: 20 },
+  textoSaude: { fontSize: 16, color: TEXTO, marginTop: 6, lineHeight: 20 },
   tagsContainer: { flexDirection: "row", flexWrap: "wrap", marginTop: 8, gap: 8 },
   tag: {
     backgroundColor: ROSA_CLARO,
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
   },
   tagTexto: { fontSize: 13, color: ROSA, fontWeight: "500" },
 
-  labelBotoes: { fontSize: 13, color: SUAVE, marginBottom: 12, marginTop: 4 },
+  labelBotoes: { fontSize: 16, color: SUAVE, marginBottom: 12, marginTop: 4 },
   btn: {
     width: "100%",
     borderRadius: 10,
