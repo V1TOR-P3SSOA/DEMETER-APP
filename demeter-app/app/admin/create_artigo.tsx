@@ -81,11 +81,20 @@ export default function CreateArtigoScreen() {
       <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        <TouchableOpacity onPress={() => router.back()} style={styles.backRow}>
-          <Text style={styles.backIcon}>‹</Text>
-        </TouchableOpacity>
+        {/* ── Cabeçalho: seta + logo ── */}
+        <View style={styles.headerRow}>
+  <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+    <Text style={styles.backIcon}>‹</Text>
+  </TouchableOpacity>
 
-        <Text style={styles.title}>Cadastro{"\n"}de artigos</Text>
+  <Image
+    source={require("../../assets/images/demeter.png")}
+    style={{ width: 100, height: 100, opacity: 0.9 }}
+    resizeMode="contain"
+  />
+</View>
+
+<Text style={styles.title}>Cadastro{"\n"}de artigos</Text>
 
         <View style={styles.formCard}>
 
@@ -139,7 +148,8 @@ export default function CreateArtigoScreen() {
   );
 }
 
-const ROSA             = "#b5405a";
+const ROSA             = "#D4476B";
+const ROSAd            = "#e0849a";
 const ROSA_CLARO       = "#fce8ed";
 const ROSA_BORDA       = "#e8a0b0";
 const ROSA_PLACEHOLDER = "#d4a0b0";
@@ -148,18 +158,37 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: ROSA_CLARO },
   scroll: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 60 },
 
-  backRow: { marginBottom: 4 },
-  backIcon: { fontSize: 32, color: ROSA, fontWeight: "300", lineHeight: 36 },
-
-  title: {
-    fontSize: 34,
-    fontWeight: "700",
-    fontFamily: "serif",
+  // ── Cabeçalho ─────────────────────────────────────────────────────────────
+  headerRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  paddingTop: 16,   // ← controla só a altura da seta e logo
+  marginBottom: 0,  // ← sem espaço extra
+},
+  backBtn: {
+    padding: 8,           // área de toque maior
+  },
+  backIcon: {
+    fontSize: 52,         // seta bem maior e visível
     color: ROSA,
-    lineHeight: 40,
-    marginBottom: 24,
+    fontWeight: "300",
+    lineHeight: 56,
   },
 
+  // ── Título centralizado ────────────────────────────────────────────────────
+  title: {
+  fontSize: 34,
+  fontWeight: "700",
+  fontFamily: "serif",
+  color: ROSA,
+  lineHeight: 40,
+  textAlign: "center",
+  marginTop: -70,    // ← controla só a altura do título independentemente
+  marginBottom: 14,
+},
+
+  // ── Formulário ─────────────────────────────────────────────────────────────
   formCard: {
     backgroundColor: "#fff8f9",
     borderRadius: 24,
@@ -210,16 +239,23 @@ const styles = StyleSheet.create({
 
   textArea: { height: 240, textAlignVertical: "top" },
 
+  // ── Botão cadastrar (mesma cor do "Novo artigo") ───────────────────────────
   btn: {
-    backgroundColor: ROSA,
-    borderRadius: 50,
-    paddingVertical: 16,
+    backgroundColor: ROSAd,  // #e0849a — igual ao btnNovo do artigos.tsx
+    borderRadius: 14,
+    paddingVertical: 15,
     alignItems: "center",
     shadowColor: ROSA,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 4,
   },
-  btnText: { color: "#fff", fontSize: 17, fontWeight: "700", fontFamily: "serif" },
+  btnText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "700",
+    fontFamily: "serif",
+    letterSpacing: 0.2,
+  },
 });
