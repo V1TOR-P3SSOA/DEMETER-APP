@@ -106,7 +106,7 @@ async function logout(): Promise<void> {
   await AsyncStorage.removeItem("auth_token");
 }
 
-// ─── Ícone de editar (SVG) ────────────────────────────────────────────────────
+// ─── Ícone de editar ──────────────────────────────────────────────────────────
 function IconEdit() {
   return (
     <Svg width={22} height={22} viewBox="0 0 16 16" fill="none">
@@ -115,6 +115,21 @@ function IconEdit() {
         stroke="#D4476B"
         strokeOpacity={0.8}
         strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+// ─── Ícone de sair ────────────────────────────────────────────────────────────
+function IconSair() {
+  return (
+    <Svg width={28} height={28} viewBox="0 0 30 30" fill="none">
+      <Path
+        d="M10.0944 28.2831H4.03145C3.22746 28.2831 2.4564 27.9637 1.88789 27.3952C1.31938 26.8267 1 26.0556 1 25.2516V4.03145C1 3.22746 1.31938 2.4564 1.88789 1.88789C2.4564 1.31938 3.22746 1 4.03145 1H10.0944M20.7045 7.06291L28.2831 14.6415L20.7045 22.2202M28.2831 14.6415H10.0944"
+        stroke="#FDF8F4"
+        strokeWidth={2}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -214,7 +229,6 @@ export default function PerfilScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
-  // Recarrega toda vez que a tela recebe foco (inclusive ao voltar do editar-formulario)
   useFocusEffect(
     useCallback(() => {
       carregarPerfil();
@@ -341,11 +355,13 @@ export default function PerfilScreen() {
               resizeMode="cover"
             />
 
-            <TouchableOpacity style={s.sairBtn} onPress={handleSair}>
-              <Text style={s.sairIcon}>⇒</Text>
+            {/* Botão sair atualizado */}
+            <TouchableOpacity style={s.sairBtn} onPress={handleSair} activeOpacity={0.75}>
+              <IconSair />
               <Text style={s.sairText}>Sair</Text>
             </TouchableOpacity>
 
+            {/* Avatar */}
             <TouchableOpacity style={s.avatarWrap} onPress={handleFoto} activeOpacity={0.85}>
               {usuario.foto_url ? (
                 <Image source={{ uri: usuario.foto_url }} style={s.avatarImage} />
@@ -486,14 +502,22 @@ const s = StyleSheet.create({
     opacity: 0.35,
   },
 
+  // Botão sair — maior e com SVG
   sairBtn: {
     position: "absolute",
-    top: 16, right: 16,
+    top: 14,
+    right: 14,
     alignItems: "center",
     zIndex: 10,
+    padding: 8,
   },
-  sairIcon: { fontSize: 26, color: "#fff" },
-  sairText: { fontSize: 12, color: "#f8d7da", marginTop: 2, fontWeight: "600" },
+  sairText: {
+    fontSize: 13,
+    color: "#fdf8f4",
+    marginTop: 4,
+    fontWeight: "600",
+    letterSpacing: 0.3,
+  },
 
   avatarWrap: {
     width: 110, height: 110, borderRadius: 55,
