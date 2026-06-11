@@ -1,5 +1,5 @@
 // app/maeinfo.tsx
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,13 +12,17 @@ import {
   Platform,
   StatusBar,
   Image,
+  TextInput,
+  Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router"; // ← adicionado
+import { useRouter, useFocusEffect } from "expo-router";
+import Svg, { Path } from "react-native-svg";
 import Navbar from "../components/Navbar";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
+// ─── Tipos ────────────────────────────────────────────────────────────────────
 type MaeInfo = {
   nome: string;
   idade: number;
@@ -32,8 +36,13 @@ type MaeInfo = {
   restricoes_alimentares: string[] | null;
 };
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+async function getToken() {
+  return await AsyncStorage.getItem("auth_token");
+}
+
 async function fetchMaeInfo(): Promise<MaeInfo> {
-  const token = await AsyncStorage.getItem("auth_token");
+  const token = await getToken();
   const response = await fetch(`${API_URL}/api/mae/info`, {
     headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
   });
@@ -41,17 +50,173 @@ async function fetchMaeInfo(): Promise<MaeInfo> {
   return response.json();
 }
 
-// ─── Modal de status ──────────────────────────────────────────────────────────
-function StatusModal({
-  visible,
-  tipo,
-  onClose,
-  onEngano, // ← adicionado
+async function patchFormulario(campos: Record<string, any>): Promise<void> {
+  const token = await getToken();
+  const res = await fetch(`${API_URL}/api/formulario`, {
+    method: "POST", // updateOrCreate
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(campos),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : {};
+    throw new Error(data.message || "Erro ao salvar.");
+  }
+}
+
+async function patchUsuario(campos: Record<string, any>): Promise<void> {
+  const token = await getToken();
+  const res = await fetch(`${API_URL}/api/perfil`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(campos),
+  });
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.message || "Erro ao salvar.");
+  }
+}
+
+// ─── Opções de restrições ─────────────────────────────────────────────────────
+const RESTRICOES_OPCOES = [
+  "Vegetariana", "Vegana", "Intolerância a lactose",
+  "Alergia alimentar", "Outra", "Nenhuma",
+];
+
+// ─── Ícone de editar ──────────────────────────────────────────────────────────
+function IconEdit() {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 16 16" fill="none">
+      <Path
+        d="M7.125 2.2526H2.16667C1.79094 2.2526 1.43061 2.40186 1.16493 2.66753C0.899255 2.93321 0.75 3.29355 0.75 3.66927V13.5859C0.75 13.9617 0.899255 14.322 1.16493 14.5877C1.43061 14.8533 1.79094 15.0026 2.16667 15.0026H12.0833C12.4591 15.0026 12.8194 14.8533 13.0851 14.5877C13.3507 14.322 13.5 13.9617 13.5 13.5859V8.6276M12.4375 1.1901C12.7193 0.908309 13.1015 0.75 13.5 0.75C13.8985 0.75 14.2807 0.908309 14.5625 1.1901C14.8443 1.47189 15.0026 1.85409 15.0026 2.2526C15.0026 2.65112 14.8443 3.03331 14.5625 3.3151L7.83333 10.0443L5 10.7526L5.70833 7.91927L12.4375 1.1901Z"
+        stroke="#D4476B"
+        strokeOpacity={0.8}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+// ─── Checkbox simples ─────────────────────────────────────────────────────────
+function CheckboxGroup({
+  options, selected, onChange,
+}: {
+  options: string[]; selected: string[]; onChange: (val: string[]) => void;
+}) {
+  const toggle = (item: string) => {
+    if (selected.includes(item)) onChange(selected.filter((i) => i !== item));
+    else onChange([...selected, item]);
+  };
+  return (
+    <View style={cb.wrap}>
+      {options.map((item) => {
+        const checked = selected.includes(item);
+        return (
+          <TouchableOpacity key={item} style={cb.row} onPress={() => toggle(item)} activeOpacity={0.7}>
+            <View style={[cb.box, checked && cb.boxChecked]}>
+              {checked && <Text style={cb.check}>✓</Text>}
+            </View>
+            <Text style={cb.label}>{item}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+const cb = StyleSheet.create({
+  wrap: { marginTop: 6 },
+  row: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
+  box: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: "#d4a0aa", backgroundColor: "#fdf6f0", alignItems: "center", justifyContent: "center", marginRight: 10 },
+  boxChecked: { backgroundColor: "#b5405a", borderColor: "#b5405a" },
+  check: { color: "#fff", fontSize: 13, fontWeight: "700" },
+  label: { fontSize: 14, color: "#3a1a22", flex: 1 },
+});
+
+// ─── Modal de edição genérico ─────────────────────────────────────────────────
+function EditModal({
+  visible, titulo, onClose, onSave, saving, children,
 }: {
   visible: boolean;
-  tipo: "finalizada" | "interrompida" | null;
+  titulo: string;
   onClose: () => void;
-  onEngano: () => void; // ← adicionado
+  onSave: () => void;
+  saving: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <View style={em.overlay}>
+        <View style={em.sheet}>
+          <Text style={em.titulo}>{titulo}</Text>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            {children}
+          </ScrollView>
+          <TouchableOpacity
+            style={[em.btn, saving && { opacity: 0.7 }]}
+            onPress={onSave}
+            disabled={saving}
+            activeOpacity={0.85}
+          >
+            {saving
+              ? <ActivityIndicator color="#f5f0e8" />
+              : <Text style={em.btnText}>Salvar</Text>
+            }
+          </TouchableOpacity>
+          <TouchableOpacity style={em.cancelBtn} onPress={onClose}>
+            <Text style={em.cancelText}>Cancelar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const em = StyleSheet.create({
+  overlay: { flex: 1, backgroundColor: "#00000055", justifyContent: "flex-end" },
+  sheet: {
+    backgroundColor: "#fdf6f0",
+    borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    padding: 28, paddingBottom: 40,
+    maxHeight: "80%",
+  },
+  titulo: {
+    fontSize: 18,
+    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+    color: "#b5405a", fontWeight: "700",
+    marginBottom: 20, textAlign: "center",
+  },
+  label: { fontSize: 13, color: "#a07080", marginBottom: 6, marginTop: 12 },
+  input: {
+    borderWidth: 1.5, borderColor: "#d4a0aa", borderRadius: 8,
+    paddingHorizontal: 14, paddingVertical: 10,
+    fontSize: 15, color: "#3a1a22", backgroundColor: "#fff8f5",
+  },
+  btn: {
+    backgroundColor: "#6b7c5c", borderRadius: 10,
+    paddingVertical: 14, alignItems: "center", marginTop: 20,
+  },
+  btnText: { color: "#f5f0e8", fontSize: 15, fontWeight: "700" },
+  cancelBtn: { alignItems: "center", marginTop: 14 },
+  cancelText: { color: "#a07080", fontSize: 14 },
+});
+
+// ─── Modal de status ──────────────────────────────────────────────────────────
+function StatusModal({
+  visible, tipo, onClose, onEngano,
+}: {
+  visible: boolean; tipo: "finalizada" | "interrompida" | null;
+  onClose: () => void; onEngano: () => void;
 }) {
   const scaleAnim = useRef(new Animated.Value(0.85)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -59,17 +224,8 @@ function StatusModal({
   useEffect(() => {
     if (visible) {
       Animated.parallel([
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          useNativeDriver: true,
-          damping: 14,
-          stiffness: 200,
-        }),
-        Animated.timing(opacityAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
+        Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, damping: 14, stiffness: 200 }),
+        Animated.timing(opacityAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
       ]).start();
     } else {
       scaleAnim.setValue(0.85);
@@ -80,50 +236,23 @@ function StatusModal({
   if (!tipo) return null;
 
   const isFinalizada = tipo === "finalizada";
-
   const conteudo = isFinalizada
-    ? {
-        emoji: "🎉",
-        titulo: "Parabéns!",
-        texto:
-          "Que momento incrível! Sua jornada de gestação chegou ao fim. Desejamos toda saúde e felicidade para você e seu bebê!",
-        circleColor: VERDE,
-        btnColor: ROSA,
-        btnTextoColor: CREME,
-      }
-    : {
-        emoji: "🖤",
-        titulo: "Meus pêsames...",
-        texto:
-          "Sentimos muito pelo que você está passando. Você não está sozinha. Cuide-se com muito carinho.",
-        circleColor: CINZA,
-        btnColor: CINZA,
-        btnTextoColor: CREME,
-      };
+    ? { emoji: "🎉", titulo: "Parabéns!", texto: "Que momento incrível! Sua jornada de gestação chegou ao fim. Desejamos toda saúde e felicidade para você e seu bebê!", btnColor: VERDE }
+    : { emoji: "🖤", titulo: "Meus pêsames...", texto: "Sentimos muito pelo que você está passando. Você não está sozinha. Cuide-se com muito carinho.", btnColor: CINZA };
 
   return (
     <Modal transparent visible={visible} animationType="none" onRequestClose={onClose}>
       <View style={al.overlay}>
-        <Animated.View
-          style={[al.box, { opacity: opacityAnim, transform: [{ scale: scaleAnim }] }]}
-        >
-          <View style={[al.iconCircle, isFinalizada ? al.iconCircleError : al.iconCircleWarn]}>
+        <Animated.View style={[al.box, { opacity: opacityAnim, transform: [{ scale: scaleAnim }] }]}>
+          <View style={[al.iconCircle, { backgroundColor: conteudo.btnColor }]}>
             <Text style={al.iconEmoji}>{conteudo.emoji}</Text>
           </View>
           <Text style={al.title}>{conteudo.titulo}</Text>
           <Text style={al.message}>{conteudo.texto}</Text>
-
-          {/* Botão principal — confirma e vai para home */}
           <TouchableOpacity style={[al.btn, { backgroundColor: conteudo.btnColor }]} onPress={onClose} activeOpacity={0.8}>
-            <Text style={[al.btnText, { color: conteudo.btnTextoColor }]}>Confirmar</Text>
+            <Text style={[al.btnText, { color: CREME }]}>Confirmar</Text>
           </TouchableOpacity>
-
-          {/* Botão secundário — cancela e limpa o status */}
-          <TouchableOpacity
-            style={[al.btn, al.btnEngano]}
-            onPress={onEngano}
-            activeOpacity={0.8}
-          >
+          <TouchableOpacity style={[al.btn, al.btnEngano]} onPress={onEngano} activeOpacity={0.8}>
             <Text style={[al.btnText, { color: SUAVE }]}>Foi um engano</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -133,83 +262,47 @@ function StatusModal({
 }
 
 const al = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(58, 26, 34, 0.45)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-  },
-  box: {
-    backgroundColor: "#fdf6f0",
-    borderRadius: 20,
-    padding: 28,
-    width: "100%",
-    alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: "#e8c8d0",
-    shadowColor: "#3a1a22",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    elevation: 10,
-  },
-  iconCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 14,
-  },
-  iconCircleError: { backgroundColor: "#6b7c5c" },
-  iconCircleWarn: { backgroundColor: "#888888" },
+  overlay: { flex: 1, backgroundColor: "rgba(58, 26, 34, 0.45)", justifyContent: "center", alignItems: "center", paddingHorizontal: 32 },
+  box: { backgroundColor: "#fdf6f0", borderRadius: 20, padding: 28, width: "100%", alignItems: "center", borderWidth: 1.5, borderColor: "#e8c8d0", shadowColor: "#3a1a22", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 16, elevation: 10 },
+  iconCircle: { width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center", marginBottom: 14 },
   iconEmoji: { fontSize: 26 },
-  title: {
-    fontSize: 18,
-    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-    fontWeight: "700",
-    color: "#b5405a",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  message: {
-    fontSize: 14,
-    color: "#3a1a22",
-    textAlign: "center",
-    lineHeight: 20,
-    marginBottom: 6,
-  },
-  btn: {
-    marginTop: 14,
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 40,
-    width: "100%",
-    alignItems: "center",
-  },
-  btnEngano: {
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: "#d4a0aa",
-  },
+  title: { fontSize: 18, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", fontWeight: "700", color: "#b5405a", marginBottom: 10, textAlign: "center" },
+  message: { fontSize: 14, color: "#3a1a22", textAlign: "center", lineHeight: 20, marginBottom: 6 },
+  btn: { marginTop: 14, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 40, width: "100%", alignItems: "center" },
+  btnEngano: { backgroundColor: "transparent", borderWidth: 1, borderColor: "#d4a0aa" },
   btnText: { fontSize: 15, fontWeight: "700", letterSpacing: 0.3 },
 });
-// ─────────────────────────────────────────────────────────────────────────────
 
+// ─── Tela principal ───────────────────────────────────────────────────────────
 export default function MaeInfoScreen() {
-  const router = useRouter(); // ← adicionado
+  const router = useRouter();
   const [dados, setDados] = useState<MaeInfo | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [modalTipo, setModalTipo] = useState<"finalizada" | "interrompida" | null>(null);
 
+  // Estados dos modais de edição
+  const [editPessoal, setEditPessoal] = useState(false);
+  const [editMetricas, setEditMetricas] = useState(false);
+  const [editSaude, setEditSaude] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Campos de edição — Dados pessoais
+  const [editNome, setEditNome] = useState("");
+  const [editIdade, setEditIdade] = useState("");
+
+  // Campos de edição — Métricas
+  const [editPeso, setEditPeso] = useState("");
+  const [editAltura, setEditAltura] = useState("");
+
+  // Campos de edição — Saúde
+  const [editDoencas, setEditDoencas] = useState("");
+  const [editRestricoes, setEditRestricoes] = useState<string[]>([]);
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(40)).current;
 
-  useEffect(() => {
-    carregarDados();
-  }, []);
+  useFocusEffect(useCallback(() => { carregarDados(); }, []));
 
   async function carregarDados() {
     try {
@@ -218,17 +311,8 @@ export default function MaeInfoScreen() {
       const info = await fetchMaeInfo();
       setDados(info);
       Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          friction: 8,
-          tension: 60,
-          useNativeDriver: true,
-        }),
+        Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+        Animated.spring(slideAnim, { toValue: 0, friction: 8, tension: 60, useNativeDriver: true }),
       ]).start();
     } catch {
       setErro("Não foi possível carregar suas informações.");
@@ -237,19 +321,87 @@ export default function MaeInfoScreen() {
     }
   }
 
+  // ── Abrir modais com dados preenchidos ────────────────────────────────────
+  function abrirEditPessoal() {
+    if (!dados) return;
+    setEditNome(dados.nome);
+    setEditIdade(String(dados.idade));
+    setEditPessoal(true);
+  }
+
+  function abrirEditMetricas() {
+    if (!dados) return;
+    setEditPeso(String(dados.peso_kg));
+    setEditAltura(String(dados.altura_cm));
+    setEditMetricas(true);
+  }
+
+  function abrirEditSaude() {
+    if (!dados) return;
+    setEditDoencas(dados.doencas ?? "");
+    setEditRestricoes(dados.restricoes_alimentares ?? []);
+    setEditSaude(true);
+  }
+
+  // ── Salvar dados pessoais (nome via /api/perfil + idade via /api/formulario)
+  async function salvarPessoal() {
+    setSaving(true);
+    try {
+      await patchUsuario({ nome: editNome.trim() });
+      await patchFormulario({ idade: editIdade });
+      setEditPessoal(false);
+      await carregarDados();
+    } catch (err: any) {
+      Alert.alert("Erro", err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // ── Salvar métricas (peso + altura via /api/formulario)
+  async function salvarMetricas() {
+    setSaving(true);
+    try {
+      await patchFormulario({ peso: editPeso, altura: editAltura });
+      setEditMetricas(false);
+      await carregarDados();
+    } catch (err: any) {
+      Alert.alert("Erro", err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // ── Salvar saúde (doenças + restrições via /api/formulario)
+  async function salvarSaude() {
+    setSaving(true);
+    try {
+      await patchFormulario({
+        doencas: editDoencas,
+        restricoes_alimentares: editRestricoes,
+      });
+      setEditSaude(false);
+      await carregarDados();
+    } catch (err: any) {
+      Alert.alert("Erro", err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function salvarStatus(tipo: "finalizada" | "interrompida") {
-    const token = await AsyncStorage.getItem("auth_token");
+    const token = await getToken();
     await AsyncStorage.setItem(`status_gestacao_${token}`, tipo);
     setModalTipo(tipo);
   }
 
-  // ← handler do "Foi um engano": limpa o status salvo e fecha o modal
   async function handleEngano() {
-    const token = await AsyncStorage.getItem("auth_token");
+    const token = await getToken();
     await AsyncStorage.removeItem(`status_gestacao_${token}`);
     setModalTipo(null);
   }
 
+  // ── Loading / Erro ────────────────────────────────────────────────────────
   if (carregando) {
     return (
       <View style={styles.centralizador}>
@@ -265,11 +417,7 @@ export default function MaeInfoScreen() {
       <View style={styles.centralizador}>
         <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
         <Text style={styles.textoErro}>{erro}</Text>
-        <TouchableOpacity
-          style={styles.btnTentar}
-          onPress={carregarDados}
-          activeOpacity={0.85}
-        >
+        <TouchableOpacity style={styles.btnTentar} onPress={carregarDados} activeOpacity={0.85}>
           <Text style={styles.btnTentarTexto}>Tentar novamente</Text>
         </TouchableOpacity>
       </View>
@@ -283,30 +431,69 @@ export default function MaeInfoScreen() {
       <StatusModal
         visible={modalTipo !== null}
         tipo={modalTipo}
-        onClose={() => {
-          setModalTipo(null);
-          router.replace("/home" as any); // ← redireciona para home ao confirmar
-        }}
-        onEngano={handleEngano} // ← limpa status e fecha modal
+        onClose={() => { setModalTipo(null); router.replace("/home" as any); }}
+        onEngano={handleEngano}
       />
 
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
+      {/* ── Modal: Dados Pessoais ── */}
+      <EditModal
+        visible={editPessoal}
+        titulo="Editar Dados Pessoais"
+        onClose={() => setEditPessoal(false)}
+        onSave={salvarPessoal}
+        saving={saving}
       >
-        <Animated.View
-          style={[
-            styles.container,
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-          ]}
-        >
+        <Text style={em.label}>Nome</Text>
+        <TextInput style={em.input} value={editNome} onChangeText={setEditNome} autoCapitalize="words" />
+        <Text style={em.label}>Idade</Text>
+        <TextInput style={em.input} value={editIdade} onChangeText={setEditIdade} keyboardType="numeric" />
+      </EditModal>
+
+      {/* ── Modal: Métricas ── */}
+      <EditModal
+        visible={editMetricas}
+        titulo="Editar Métricas Corporais"
+        onClose={() => setEditMetricas(false)}
+        onSave={salvarMetricas}
+        saving={saving}
+      >
+        <Text style={em.label}>Peso (kg)</Text>
+        <TextInput style={em.input} value={editPeso} onChangeText={setEditPeso} keyboardType="numeric" placeholder="Ex: 65" placeholderTextColor="#c8a0a8" />
+        <Text style={em.label}>Altura (cm)</Text>
+        <TextInput style={em.input} value={editAltura} onChangeText={setEditAltura} keyboardType="numeric" placeholder="Ex: 165" placeholderTextColor="#c8a0a8" />
+      </EditModal>
+
+      {/* ── Modal: Saúde ── */}
+      <EditModal
+        visible={editSaude}
+        titulo="Editar Saúde"
+        onClose={() => setEditSaude(false)}
+        onSave={salvarSaude}
+        saving={saving}
+      >
+        <Text style={em.label}>Doenças / Condições</Text>
+        <TextInput
+          style={[em.input, { minHeight: 80, textAlignVertical: "top" }]}
+          value={editDoencas}
+          onChangeText={setEditDoencas}
+          multiline
+          placeholder="Descreva ou escreva 'Não'"
+          placeholderTextColor="#c8a0a8"
+        />
+        <Text style={em.label}>Restrições Alimentares</Text>
+        <CheckboxGroup
+          options={RESTRICOES_OPCOES}
+          selected={editRestricoes}
+          onChange={setEditRestricoes}
+        />
+      </EditModal>
+
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <Animated.View style={[styles.container, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+
           {/* Avatar */}
           <View style={styles.avatarCircle}>
-            <Image
-              source={require("../assets/images/demeter.png")}
-              style={styles.avatarImage}
-              resizeMode="contain"
-            />
+            <Image source={require("../assets/images/demeter.png")} style={styles.avatarImage} resizeMode="contain" />
           </View>
 
           <Text style={styles.tituloPagina}>Minhas Informações</Text>
@@ -314,7 +501,12 @@ export default function MaeInfoScreen() {
 
           {/* ── Card: Dados pessoais ── */}
           <View style={styles.card}>
-            <Text style={styles.cardTitulo}>Dados Pessoais</Text>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitulo}>Dados Pessoais</Text>
+              <TouchableOpacity onPress={abrirEditPessoal} style={styles.editBtnWrap}>
+                <IconEdit />
+              </TouchableOpacity>
+            </View>
             <View style={styles.linha}>
               <Text style={styles.rotulo}>Nome</Text>
               <Text style={styles.valor}>{dados.nome}</Text>
@@ -335,7 +527,12 @@ export default function MaeInfoScreen() {
 
           {/* ── Card: Métricas ── */}
           <View style={styles.card}>
-            <Text style={styles.cardTitulo}>Métricas Corporais</Text>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitulo}>Métricas Corporais</Text>
+              <TouchableOpacity onPress={abrirEditMetricas} style={styles.editBtnWrap}>
+                <IconEdit />
+              </TouchableOpacity>
+            </View>
             <View style={styles.gridMetricas}>
               <View style={styles.metricaItem}>
                 <Text style={styles.metricaValor}>{dados.peso_kg}</Text>
@@ -367,50 +564,47 @@ export default function MaeInfoScreen() {
           </View>
 
           {/* ── Card: Saúde ── */}
-          {(dados.doencas ||
-            (dados.restricoes_alimentares &&
-              dados.restricoes_alimentares.length > 0)) && (
-            <View style={styles.card}>
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
               <Text style={styles.cardTitulo}>Saúde</Text>
-              {dados.doencas && (
-                <>
-                  <Text style={styles.rotulo}>Doenças / Condições</Text>
-                  <Text style={styles.textoSaude}>{dados.doencas}</Text>
-                </>
-              )}
-              {dados.restricoes_alimentares &&
-                dados.restricoes_alimentares.length > 0 && (
-                  <>
-                    {dados.doencas && <View style={styles.divisor} />}
-                    <Text style={styles.rotulo}>Restrições Alimentares</Text>
-                    <View style={styles.tagsContainer}>
-                      {dados.restricoes_alimentares.map((item, i) => (
-                        <View key={i} style={styles.tag}>
-                          <Text style={styles.tagTexto}>{item}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  </>
-                )}
+              <TouchableOpacity onPress={abrirEditSaude} style={styles.editBtnWrap}>
+                <IconEdit />
+              </TouchableOpacity>
             </View>
-          )}
+            {dados.doencas ? (
+              <>
+                <Text style={styles.rotulo}>Doenças / Condições</Text>
+                <Text style={styles.textoSaude}>{dados.doencas}</Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.rotulo}>Doenças / Condições</Text>
+                <Text style={styles.textoSaude}>Não informado</Text>
+              </>
+            )}
+            <View style={styles.divisor} />
+            <Text style={styles.rotulo}>Restrições Alimentares</Text>
+            {dados.restricoes_alimentares && dados.restricoes_alimentares.length > 0 ? (
+              <View style={styles.tagsContainer}>
+                {dados.restricoes_alimentares.map((item, i) => (
+                  <View key={i} style={styles.tag}>
+                    <Text style={styles.tagTexto}>{item}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.textoSaude}>Não informado</Text>
+            )}
+          </View>
 
           {/* ── Botões de status ── */}
           <Text style={styles.labelBotoes}>Atualizar status da gestação:</Text>
 
-          <TouchableOpacity
-            style={[styles.btn, styles.btnFinalizada]}
-            onPress={() => salvarStatus("finalizada")}
-            activeOpacity={0.85}
-          >
+          <TouchableOpacity style={[styles.btn, styles.btnFinalizada]} onPress={() => salvarStatus("finalizada")} activeOpacity={0.85}>
             <Text style={styles.btnTexto}>🎉  Gravidez Finalizada</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.btn, styles.btnInterrompida]}
-            onPress={() => salvarStatus("interrompida")}
-            activeOpacity={0.85}
-          >
+          <TouchableOpacity style={[styles.btn, styles.btnInterrompida]} onPress={() => salvarStatus("interrompida")} activeOpacity={0.85}>
             <Text style={styles.btnTexto}>🤍  Gravidez Interrompida</Text>
           </TouchableOpacity>
 
@@ -441,95 +635,30 @@ const styles = StyleSheet.create({
   outer: { flex: 1, backgroundColor: ROSA_CLARO },
   scroll: { flexGrow: 1, alignItems: "center", paddingVertical: 40, paddingHorizontal: 24 },
   container: { width: "100%", alignItems: "center" },
-  centralizador: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: ROSA_CLARO,
-    padding: 24,
-  },
+  centralizador: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: ROSA_CLARO, padding: 24 },
   textoCarregando: { marginTop: 12, color: SUAVE, fontSize: 15 },
   textoErro: { color: ROSA, fontSize: 15, textAlign: "center", marginBottom: 16 },
-  btnTentar: {
-    backgroundColor: ROSA,
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 28,
-  },
+  btnTentar: { backgroundColor: ROSA, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 28 },
   btnTentarTexto: { color: CREME, fontWeight: "700", fontSize: 14 },
 
-  avatarCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: ROSA_CLARO,
-    overflow: "hidden",
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: ROSA_BORDA,
-  },
-  avatarImage: {
-    width: "180%",
-    height: "180%",
-    position: "absolute",
-    top: "-40%",
-    left: "-40%",
-  },
-  tituloPagina: {
-    fontSize: 28,
-    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-    color: ROSA,
-    marginBottom: 4,
-    letterSpacing: 0.4,
-  },
+  avatarCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: ROSA_CLARO, overflow: "hidden", marginBottom: 12, borderWidth: 2, borderColor: ROSA_BORDA },
+  avatarImage: { width: "180%", height: "180%", position: "absolute", top: "-40%", left: "-40%" },
+  tituloPagina: { fontSize: 28, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", color: ROSA, marginBottom: 4, letterSpacing: 0.4 },
   subtitulo: { fontSize: 15, color: SUAVE, marginBottom: 28 },
 
-  card: {
-    width: "100%",
-    backgroundColor: CREME_CARD,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 1.5,
-    borderColor: ROSA_BORDA,
-    shadowColor: ROSA,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  cardTitulo: {
-    fontSize: 15,
-    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-    fontWeight: "700",
-    color: ROSA,
-    marginBottom: 16,
-  },
-  linha: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 2,
-  },
+  card: { width: "100%", backgroundColor: CREME_CARD, borderRadius: 16, padding: 20, marginBottom: 16, borderWidth: 1.5, borderColor: ROSA_BORDA, shadowColor: ROSA, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 4 },
+  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
+  cardTitulo: { fontSize: 15, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", fontWeight: "700", color: ROSA },
+  editBtnWrap: { padding: 4 },
+
+  linha: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 2 },
   rotulo: { fontSize: 13, color: SUAVE },
   valor: { fontSize: 15, fontWeight: "600", color: TEXTO },
   divisor: { height: 1, backgroundColor: ROSA_BORDA, marginVertical: 10 },
-  badge: {
-    backgroundColor: ROSA_CLARO,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    borderWidth: 1,
-    borderColor: ROSA_BORDA,
-  },
+  badge: { backgroundColor: ROSA_CLARO, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, borderWidth: 1, borderColor: ROSA_BORDA },
   badgeTexto: { fontSize: 13, color: ROSA, fontWeight: "600" },
 
-  gridMetricas: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    marginBottom: 4,
-  },
+  gridMetricas: { flexDirection: "row", justifyContent: "space-around", alignItems: "center", marginBottom: 4 },
   metricaItem: { alignItems: "center", flex: 1 },
   metricaValor: { fontSize: 26, fontWeight: "700", color: ROSA },
   metricaUnidade: { fontSize: 13, color: SUAVE, marginTop: -2 },
@@ -540,28 +669,11 @@ const styles = StyleSheet.create({
 
   textoSaude: { fontSize: 14, color: TEXTO, marginTop: 6, lineHeight: 20 },
   tagsContainer: { flexDirection: "row", flexWrap: "wrap", marginTop: 8, gap: 8 },
-  tag: {
-    backgroundColor: ROSA_CLARO,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    borderWidth: 1,
-    borderColor: ROSA_BORDA,
-  },
+  tag: { backgroundColor: ROSA_CLARO, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, borderWidth: 1, borderColor: ROSA_BORDA },
   tagTexto: { fontSize: 13, color: ROSA, fontWeight: "500" },
 
   labelBotoes: { fontSize: 13, color: SUAVE, marginBottom: 12, marginTop: 4 },
-  btn: {
-    width: "100%",
-    borderRadius: 10,
-    paddingVertical: 15,
-    alignItems: "center",
-    marginBottom: 12,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 4,
-  },
+  btn: { width: "100%", borderRadius: 10, paddingVertical: 15, alignItems: "center", marginBottom: 12, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 6, elevation: 4 },
   btnFinalizada: { backgroundColor: VERDE, shadowColor: "#3a4a2c" },
   btnInterrompida: { backgroundColor: CINZA, shadowColor: "#333" },
   btnTexto: { fontSize: 15, fontWeight: "700", color: CREME, letterSpacing: 0.3 },
