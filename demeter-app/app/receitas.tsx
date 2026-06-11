@@ -78,7 +78,7 @@ function Tag({ label, categoria }: { label: string; categoria: keyof typeof TAG_
 
 const tagStyle = StyleSheet.create({
   wrap: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, marginRight: 6, marginBottom: 6 },
-  text: { fontSize: 11, fontWeight: "600" },
+  text: { fontSize: 15, fontWeight: "600" },
 });
 
 function ReceitaTags({ receita }: { receita: Receita }) {
@@ -158,8 +158,8 @@ const modal = StyleSheet.create({
   imagePlaceholderText: { fontSize: 56 },
   content: { padding: 20 },
   nome: { fontSize: 24, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", color: "#b5405a", fontWeight: "700", marginBottom: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#3a1a22", marginTop: 20, marginBottom: 8 },
-  sectionText: { fontSize: 14, color: "#5a3a3a", lineHeight: 22 },
+  sectionTitle: { fontSize: 19, fontWeight: "700", color: "#3a1a22", marginTop: 20, marginBottom: 8 },
+  sectionText: { fontSize: 19, color: "#5a3a3a", lineHeight: 22 },
   closeBtn: { marginHorizontal: 20, marginTop: 8, backgroundColor: "#6b7c5c", borderRadius: 12, paddingVertical: 14, alignItems: "center" },
   closeBtnText: { color: "#f5f0e8", fontSize: 15, fontWeight: "700" },
 });
@@ -300,7 +300,7 @@ export default function ReceitasScreen() {
     fetchReceitas();
   };
 
-  const temFiltrosAtivos = Object.values(filtrosAtivos).some((v) => v) || search.trim();
+  const temFiltrosAtivos = Object.values(filtrosAtivos).some((v) => v) || !!search.trim();
 
   const openModal = (receita: Receita) => { setSelected(receita); setModalVisible(true); };
   const closeModal = () => { setModalVisible(false); setSelected(null); };
@@ -359,29 +359,30 @@ export default function ReceitasScreen() {
           </TouchableOpacity>
         </ScrollView>
       )}
-
-      {loading ? (
-        <ActivityIndicator size="large" color="#b5405a" style={{ marginTop: 40 }} />
-      ) : receitas.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyText}>Nenhuma receita encontrada.</Text>
-          {temFiltrosAtivos && (
-            <TouchableOpacity onPress={handleLimparTudo}>
-              <Text style={styles.limparLink}>Limpar filtros</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      ) : (
-        <FlatList
-          data={receitas}
-          keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <ReceitaCard receita={item} onPress={() => openModal(item)} />
-          )}
-        />
-      )}
+      <View style={{ flex: 1 }}>
+        {loading ? (
+          <ActivityIndicator size="large" color="#b5405a" style={{ marginTop: 40 }} />
+        ) : receitas.length === 0 ? (
+          <View style={styles.empty}>
+            <Text style={styles.emptyText}>Nenhuma receita encontrada.</Text>
+            {temFiltrosAtivos && (
+              <TouchableOpacity onPress={handleLimparTudo}>
+                <Text style={styles.limparLink}>Limpar filtros</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : (
+          <FlatList
+            data={receitas}
+            keyExtractor={(item) => String(item.id)}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <ReceitaCard receita={item} onPress={() => openModal(item)} />
+            )}
+          />
+        )}
+      </View>
 
       <Navbar current="receitas" />
       <ReceitaModal receita={selected} visible={modalVisible} onClose={closeModal} />

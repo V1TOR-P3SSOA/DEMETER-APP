@@ -571,17 +571,17 @@ const s = StyleSheet.create({
     alignItems: "center", marginBottom: 12,
   },
   cardTitulo: {
-    fontSize: 15,
+    fontSize: 18,
     fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
     fontWeight: "700", color: ROSA,
   },
   editBtnWrap: { padding: 4 },
 
   linha: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 4 },
-  rotulo: { fontSize: 13, color: SUAVE, flex: 1 },
-  valor: { fontSize: 14, fontWeight: "600", color: TEXTO, flex: 2, textAlign: "right" },
+  rotulo: { fontSize: 16, color: SUAVE, flex: 1 },
+  valor: { fontSize: 16, fontWeight: "600", color: TEXTO, flex: 2, textAlign: "right" },
   divisor: { height: 1, backgroundColor: ROSA_BORDA, marginVertical: 6 },
-  subTitulo: { fontSize: 13, color: SUAVE, marginBottom: 8, marginTop: 4 },
+  subTitulo: { fontSize: 16, color: SUAVE, marginBottom: 8, marginTop: 4 },
 
   tagWrap: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 4 },
   tag: {

@@ -403,15 +403,19 @@ export default function MaeInfoScreen() {
 
   // ── Loading / Erro ────────────────────────────────────────────────────────
   if (carregando) {
-    return (
-      <View style={styles.centralizador}>
-        <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
-        <ActivityIndicator size="large" color={ROSA} />
-        <Text style={styles.textoCarregando}>Carregando suas informações...</Text>
+  return (
+    <View style={styles.centralizador}>
+      <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
+      <ActivityIndicator size="large" color={ROSA} />
+      <Text style={styles.textoCarregando}>Carregando suas informações...</Text>
+      <View style={styles.navbarWrap}>
+        <Navbar current="sobrevoce" />
       </View>
-    );
-  }
+    </View>
+  );
+}
 
+<<<<<<< HEAD
   if (erro || !dados) {
     return (
       <View style={styles.centralizador}>
@@ -420,9 +424,22 @@ export default function MaeInfoScreen() {
         <TouchableOpacity style={styles.btnTentar} onPress={carregarDados} activeOpacity={0.85}>
           <Text style={styles.btnTentarTexto}>Tentar novamente</Text>
         </TouchableOpacity>
+=======
+if (erro || !dados) {
+  return (
+    <View style={styles.centralizador}>
+      <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
+      <Text style={styles.textoErro}>{erro}</Text>
+      <TouchableOpacity style={styles.btnTentar} onPress={carregarDados} activeOpacity={0.85}>
+        <Text style={styles.btnTentarTexto}>Tentar novamente</Text>
+      </TouchableOpacity>
+      <View style={styles.navbarWrap}>
+        <Navbar current="sobrevoce" />
+>>>>>>> cada5eee6eda432f68850bba509649465097bb7c
       </View>
-    );
-  }
+    </View>
+  );
+}
 
   return (
     <View style={styles.outer}>
@@ -641,6 +658,7 @@ const styles = StyleSheet.create({
   btnTentar: { backgroundColor: ROSA, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 28 },
   btnTentarTexto: { color: CREME, fontWeight: "700", fontSize: 14 },
 
+<<<<<<< HEAD
   avatarCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: ROSA_CLARO, overflow: "hidden", marginBottom: 12, borderWidth: 2, borderColor: ROSA_BORDA },
   avatarImage: { width: "180%", height: "180%", position: "absolute", top: "-40%", left: "-40%" },
   tituloPagina: { fontSize: 28, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", color: ROSA, marginBottom: 4, letterSpacing: 0.4 },
@@ -653,6 +671,62 @@ const styles = StyleSheet.create({
 
   linha: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 2 },
   rotulo: { fontSize: 13, color: SUAVE },
+=======
+  avatarCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: ROSA_CLARO,
+    overflow: "hidden",
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: ROSA_BORDA,
+  },
+  avatarImage: {
+    width: "180%",
+    height: "180%",
+    position: "absolute",
+    top: "-40%",
+    left: "-40%",
+  },
+  tituloPagina: {
+    fontSize: 28,
+    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+    color: ROSA,
+    marginBottom: 4,
+    letterSpacing: 0.4,
+  },
+  subtitulo: { fontSize: 18, color: SUAVE, marginBottom: 28 },
+
+  card: {
+    width: "100%",
+    backgroundColor: CREME_CARD,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: ROSA_BORDA,
+    shadowColor: ROSA,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  cardTitulo: {
+    fontSize: 18,
+    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+    fontWeight: "700",
+    color: ROSA,
+    marginBottom: 16,
+  },
+  linha: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 2,
+  },
+  rotulo: { fontSize: 16, color: SUAVE },
+>>>>>>> cada5eee6eda432f68850bba509649465097bb7c
   valor: { fontSize: 15, fontWeight: "600", color: TEXTO },
   divisor: { height: 1, backgroundColor: ROSA_BORDA, marginVertical: 10 },
   badge: { backgroundColor: ROSA_CLARO, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, borderWidth: 1, borderColor: ROSA_BORDA },
@@ -660,20 +734,35 @@ const styles = StyleSheet.create({
 
   gridMetricas: { flexDirection: "row", justifyContent: "space-around", alignItems: "center", marginBottom: 4 },
   metricaItem: { alignItems: "center", flex: 1 },
-  metricaValor: { fontSize: 26, fontWeight: "700", color: ROSA },
+  metricaValor: { fontSize: 28, fontWeight: "700", color: ROSA },
   metricaUnidade: { fontSize: 13, color: SUAVE, marginTop: -2 },
   metricaRotulo: { fontSize: 12, color: SUAVE, marginTop: 4 },
   metricaSeparador: { width: 1, height: 44, backgroundColor: ROSA_BORDA },
   metricaDestaque: { fontSize: 26, fontWeight: "700", color: ROSA, marginTop: 2 },
-  aguaValor: { fontSize: 22, fontWeight: "700", color: "#4a90d9", marginTop: 4 },
+  aguaValor: { fontSize: 26, fontWeight: "700", color: "#4a90d9", marginTop: 4 },
 
-  textoSaude: { fontSize: 14, color: TEXTO, marginTop: 6, lineHeight: 20 },
+  textoSaude: { fontSize: 16, color: TEXTO, marginTop: 6, lineHeight: 20 },
   tagsContainer: { flexDirection: "row", flexWrap: "wrap", marginTop: 8, gap: 8 },
   tag: { backgroundColor: ROSA_CLARO, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, borderWidth: 1, borderColor: ROSA_BORDA },
   tagTexto: { fontSize: 13, color: ROSA, fontWeight: "500" },
 
+<<<<<<< HEAD
   labelBotoes: { fontSize: 13, color: SUAVE, marginBottom: 12, marginTop: 4 },
   btn: { width: "100%", borderRadius: 10, paddingVertical: 15, alignItems: "center", marginBottom: 12, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 6, elevation: 4 },
+=======
+  labelBotoes: { fontSize: 16, color: SUAVE, marginBottom: 12, marginTop: 4 },
+  btn: {
+    width: "100%",
+    borderRadius: 10,
+    paddingVertical: 15,
+    alignItems: "center",
+    marginBottom: 12,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+>>>>>>> cada5eee6eda432f68850bba509649465097bb7c
   btnFinalizada: { backgroundColor: VERDE, shadowColor: "#3a4a2c" },
   btnInterrompida: { backgroundColor: CINZA, shadowColor: "#333" },
   btnTexto: { fontSize: 15, fontWeight: "700", color: CREME, letterSpacing: 0.3 },

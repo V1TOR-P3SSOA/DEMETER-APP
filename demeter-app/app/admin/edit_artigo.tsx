@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ScrollView, Alert, ActivityIndicator, Image,
+  StyleSheet, ScrollView, Alert, ActivityIndicator, Image, StatusBar,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -74,7 +74,6 @@ export default function EditArtigoScreen() {
     try {
       let foto_url = fotoUrlAtual;
       if (fotoUri) foto_url = await uploadFoto(fotoUri);
-
       const token = await AsyncStorage.getItem("auth_token");
       const res = await fetch(`${API_URL}/api/admin/artigos/${id}`, {
         method: "PUT",
@@ -97,65 +96,214 @@ export default function EditArtigoScreen() {
   };
 
   if (loading) {
-    return <View style={styles.center}><ActivityIndicator size="large" /></View>;
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={ROSA} />
+      </View>
+    );
   }
 
   const fotoExibida = fotoUri ?? fotoUrlAtual;
 
   return (
-    <ScrollView contentContainerStyle={styles.scroll}>
-      <Text style={styles.title}>Editar Artigo</Text>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-      <TouchableOpacity style={styles.fotoBtn} onPress={pickImage}>
-        {fotoExibida ? (
-          <Image source={{ uri: fotoExibida }} style={styles.fotoPreview} />
-        ) : (
-          <Text style={styles.fotoBtnText}>+ Adicionar foto</Text>
-        )}
-      </TouchableOpacity>
+        {/* ── Cabeçalho: seta + logo ── */}
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backBtn}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Text style={styles.backIcon}>‹</Text>
+          </TouchableOpacity>
 
-      <Text style={styles.label}>Título</Text>
-      <TextInput style={styles.input} value={titulo} onChangeText={setTitulo} />
+          <Image
+            source={require("../../assets/images/demeter.png")}
+            style={{ width: 100, height: 100, opacity: 0.9 }}
+            resizeMode="contain"
+          />
+        </View>
 
-      <Text style={styles.label}>Conteúdo</Text>
-      <TextInput
-        style={[styles.input, styles.textArea]}
-        value={conteudo}
-        onChangeText={setConteudo}
-        multiline
-      />
+        {/* ── Título centralizado ── */}
+        <Text style={styles.title}>Editar{"\n"}artigo</Text>
 
-      <TouchableOpacity
-        style={[styles.btn, saving && { opacity: 0.7 }]}
-        onPress={handleSalvar}
-        disabled={saving}
-      >
-        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Salvar alterações</Text>}
-      </TouchableOpacity>
-    </ScrollView>
+        <View style={styles.formCard}>
+
+          <TouchableOpacity style={styles.fotoBtn} onPress={pickImage}>
+            {fotoExibida ? (
+              <>
+                <Image source={{ uri: fotoExibida }} style={styles.fotoPreview} />
+                <View style={styles.fotoOverlay}>
+                  <Text style={styles.uploadIcon}>↑</Text>
+                  <Text style={styles.fotoBtnTextOverlay}>Faça upload de uma foto</Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <Text style={styles.uploadIcon}>↑</Text>
+                <Text style={styles.fotoBtnText}>Faça upload de uma foto</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          <Text style={styles.label}>Título:</Text>
+          <TextInput
+            style={styles.input}
+            value={titulo}
+            onChangeText={setTitulo}
+            placeholderTextColor={ROSA_PLACEHOLDER}
+          />
+
+          <Text style={styles.label}>Texto:</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            value={conteudo}
+            onChangeText={setConteudo}
+            multiline
+            textAlignVertical="top"
+            placeholderTextColor={ROSA_PLACEHOLDER}
+          />
+
+        </View>
+
+        <TouchableOpacity
+          style={[styles.btn, saving && { opacity: 0.7 }]}
+          onPress={handleSalvar}
+          disabled={saving}
+        >
+          {saving ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.btnText}>Atualizar</Text>
+          )}
+        </TouchableOpacity>
+
+      </ScrollView>
+    </View>
   );
 }
 
+const ROSA             = "#D4476B";
+const ROSAd            = "#e0849a";
+const ROSA_CLARO       = "#fce8ed";
+const ROSA_BORDA       = "#e8a0b0";
+const ROSA_PLACEHOLDER = "#d4a0b0";
+
 const styles = StyleSheet.create({
-  scroll: { padding: 24, paddingBottom: 60 },
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  title: { fontSize: 24, fontWeight: "700", marginBottom: 24 },
+  container: { flex: 1, backgroundColor: ROSA_CLARO },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: ROSA_CLARO },
+  scroll: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 60 },
+
+  // ── Cabeçalho ─────────────────────────────────────────────────────────────
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: 16,
+    marginBottom: 0,
+  },
+  backBtn: {
+    padding: 8,
+  },
+  backIcon: {
+    fontSize: 52,
+    color: ROSA,
+    fontWeight: "300",
+    lineHeight: 56,
+  },
+
+  // ── Título centralizado ────────────────────────────────────────────────────
+  title: {
+    fontSize: 34,
+    fontWeight: "700",
+    fontFamily: "serif",
+    color: ROSA,
+    lineHeight: 40,
+    textAlign: "center",
+    marginTop: -70,
+    marginBottom: 14,
+  },
+
+  // ── Formulário ─────────────────────────────────────────────────────────────
+  formCard: {
+    backgroundColor: "#fff8f9",
+    borderRadius: 24,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: ROSA,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+
   fotoBtn: {
-    width: "100%", height: 180, backgroundColor: "#f0f0f0", borderRadius: 12,
-    borderWidth: 1, borderColor: "#ccc", borderStyle: "dashed",
-    alignItems: "center", justifyContent: "center", marginBottom: 20, overflow: "hidden",
+    width: "100%",
+    height: 160,
+    backgroundColor: "#fff0f3",
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: ROSA_BORDA,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+    overflow: "hidden",
   },
-  fotoPreview: { width: "100%", height: "100%", resizeMode: "cover" },
-  fotoBtnText: { fontSize: 16, fontWeight: "600", color: "#888" },
-  label: { fontSize: 13, fontWeight: "600", marginBottom: 6, marginTop: 12 },
+  fotoPreview: { width: "100%", height: "100%", resizeMode: "cover", position: "absolute" },
+  fotoOverlay: {
+    position: "absolute",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,240,243,0.6)",
+    width: "100%",
+    height: "100%",
+  },
+  uploadIcon: { fontSize: 28, color: ROSA, marginBottom: 8 },
+  fotoBtnText: { fontSize: 14, fontWeight: "600", color: ROSA },
+  fotoBtnTextOverlay: { fontSize: 14, fontWeight: "600", color: ROSA },
+
+  label: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: ROSA,
+    marginBottom: 6,
+    marginTop: 4,
+  },
+
   input: {
-    borderWidth: 1, borderColor: "#ccc", borderRadius: 8,
-    paddingHorizontal: 14, paddingVertical: 10, fontSize: 14,
+    backgroundColor: "#fff8f9",
+    borderWidth: 1.5,
+    borderColor: ROSA_BORDA,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: ROSA,
+    marginBottom: 12,
   },
-  textArea: { height: 200, textAlignVertical: "top" },
+
+  textArea: { height: 280, textAlignVertical: "top" },
+
+  // ── Botão atualizar (mesma cor do "Novo artigo") ───────────────────────────
   btn: {
-    backgroundColor: "#6b7c5c", borderRadius: 10,
-    paddingVertical: 16, alignItems: "center", marginTop: 24,
+    backgroundColor: ROSAd,
+    borderRadius: 14,
+    paddingVertical: 15,
+    alignItems: "center",
+    shadowColor: ROSA,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  btnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  btnText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "700",
+    fontFamily: "serif",
+    letterSpacing: 0.2,
+  },
 });
