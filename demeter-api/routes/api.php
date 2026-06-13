@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ReceitaApiController;
 use App\Http\Controllers\Api\MaeInfoController;
 use App\Http\Controllers\Api\ArtigoApiController;
 use App\Http\Controllers\Api\PerfilController;
+use App\Http\Controllers\Api\AdminstatsController;
 
 // ─── Rotas autenticadas ───────────────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
@@ -33,6 +34,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/tags',      [ReceitaApiController::class, 'tags']);
         Route::get('/{receita}', [ReceitaApiController::class, 'show']);
     });
+    
+    Route::get('/admin/stats',               [AdminstatsController::class, 'stats']);
+    Route::get('/admin/cadastros-recentes',  [AdminstatsController::class, 'cadastrosRecentes']);
+    Route::get('/admin/cadastros-semanas',   [AdminstatsController::class, 'cadastrosSemanas']);
 });
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
