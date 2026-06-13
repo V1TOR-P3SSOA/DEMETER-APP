@@ -1,9 +1,9 @@
 // components/ui/AdminNavbar.tsx
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Modal } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Svg, { Path } from "react-native-svg";
+import Svg, { Path, Circle } from "react-native-svg";
 import { useFonts, Judson_400Regular } from "@expo-google-fonts/judson";
 
 type AdminTab = "dashboard" | "receitas" | "usuarios" | "artigos" | "logout";
@@ -89,23 +89,128 @@ function IconLogout() {
   );
 }
 
+// ─── Ícone de alerta (círculo com !) ─────────────────────────────────────────
+function IconAlerta() {
+  return (
+    <Svg width={48} height={48} viewBox="0 0 48 48" fill="none">
+      <Circle cx={24} cy={24} r={22} stroke="#e03030" strokeWidth={2.5} />
+      <Path d="M24 14V26" stroke="#e03030" strokeWidth={3} strokeLinecap="round" />
+      <Circle cx={24} cy={33} r={2} fill="#e03030" />
+    </Svg>
+  );
+}
+
+// ─── Modal de confirmação de logout ──────────────────────────────────────────
+type LogoutModalProps = {
+  visible: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+};
+
+function LogoutModal({ visible, onConfirm, onCancel }: LogoutModalProps) {
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={onCancel}
+    >
+      <View style={modalStyles.overlay}>
+        <View style={modalStyles.box}>
+          {/* Ícone de alerta */}
+          <View style={modalStyles.iconWrap}>
+            <IconAlerta />
+          </View>
+
+          {/* Texto */}
+          <Text style={modalStyles.title}>Tem certeza que{"\n"}deseja sair?</Text>
+
+          {/* Botões empilhados verticalmente como na print */}
+          <TouchableOpacity style={modalStyles.btnSair} onPress={onConfirm} activeOpacity={0.85}>
+            <Text style={modalStyles.btnSairText}>Sair</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={modalStyles.btnCancelar} onPress={onCancel} activeOpacity={0.85}>
+            <Text style={modalStyles.btnCancelarText}>Cancelar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const modalStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(30, 10, 15, 0.55)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+  },
+  box: {
+    backgroundColor: "#fff5f6",
+    borderRadius: 24,
+    paddingTop: 32,
+    paddingBottom: 24,
+    paddingHorizontal: 24,
+    width: "100%",
+    maxWidth: 340,
+    alignItems: "center",
+  },
+  iconWrap: {
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    fontFamily: "serif",
+    color: "#e03030",
+    textAlign: "center",
+    lineHeight: 30,
+    marginBottom: 28,
+  },
+  btnSair: {
+    width: "100%",
+    backgroundColor: "#e03030",
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  btnSairText: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "700",
+    fontFamily: "serif",
+  },
+  btnCancelar: {
+    width: "100%",
+    backgroundColor: "#c0b8ba",
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  btnCancelarText: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "700",
+    fontFamily: "serif",
+  },
+});
+
 // ─── Componente AdminNavbar ───────────────────────────────────────────────────
 export default function AdminNavbar({ current }: { current: AdminTab }) {
   const router = useRouter();
   const [fontsLoaded] = useFonts({ Judson_400Regular });
+  const [logoutVisible, setLogoutVisible] = useState(false);
 
   const labelStyle = fontsLoaded ? { fontFamily: "Judson_400Regular" } : {};
 
-  const handleLogout = () => {
-    Alert.alert("Logout", "Deseja sair do painel admin?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Sair", style: "destructive", onPress: async () => {
-          await AsyncStorage.removeItem("auth_token");
-          router.replace("/login" as any);
-        },
-      },
-    ]);
+  const handleConfirmLogout = async () => {
+    setLogoutVisible(false);
+    await AsyncStorage.removeItem("auth_token");
+    router.replace("/login" as any);
   };
 
   const tabs: {
@@ -115,37 +220,46 @@ export default function AdminNavbar({ current }: { current: AdminTab }) {
     icon: (sel: boolean) => React.ReactElement;
     onPress?: () => void;
   }[] = [
-    { key: "dashboard", label: "Início",    route: "/admin/dashboard", icon: (s) => <IconDashboard selected={s} /> },
-    { key: "receitas",  label: "Receitas",  route: "/admin/receitas",  icon: (s) => <IconReceitas selected={s} /> },
-    { key: "usuarios",  label: "Usuários",  route: "/admin/usuarios",  icon: (s) => <IconUsuarios selected={s} /> },
-    { key: "artigos",   label: "Artigos",   route: "/admin/artigos",   icon: (s) => <IconArtigos selected={s} /> },
-    { key: "logout",    label: "Logout",    icon: (_s) => <IconLogout />, onPress: handleLogout },
+    { key: "dashboard", label: "Início",   route: "/admin/dashboard", icon: (s) => <IconDashboard selected={s} /> },
+    { key: "receitas",  label: "Receitas", route: "/admin/receitas",  icon: (s) => <IconReceitas selected={s} /> },
+    { key: "usuarios",  label: "Usuários", route: "/admin/usuarios",  icon: (s) => <IconUsuarios selected={s} /> },
+    { key: "artigos",   label: "Artigos",  route: "/admin/artigos",   icon: (s) => <IconArtigos selected={s} /> },
+    { key: "logout",    label: "Logout",   icon: (_s) => <IconLogout />, onPress: () => setLogoutVisible(true) },
   ];
 
   return (
-    <View style={styles.navbar}>
-      {tabs.map((tab) => {
-        const isSelected = current === tab.key;
-        return (
-          <TouchableOpacity
-            key={tab.key}
-            style={styles.navItem}
-            onPress={() => {
-              if (tab.onPress) { tab.onPress(); return; }
-              if (!isSelected && tab.route) router.push(tab.route as any);
-            }}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.iconWrap, isSelected && styles.iconWrapSelected]}>
-              {tab.icon(isSelected)}
-            </View>
-            <Text style={[styles.label, isSelected && styles.labelSelected, labelStyle]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
+    <>
+      {/* Modal de logout */}
+      <LogoutModal
+        visible={logoutVisible}
+        onConfirm={handleConfirmLogout}
+        onCancel={() => setLogoutVisible(false)}
+      />
+
+      <View style={styles.navbar}>
+        {tabs.map((tab) => {
+          const isSelected = current === tab.key;
+          return (
+            <TouchableOpacity
+              key={tab.key}
+              style={styles.navItem}
+              onPress={() => {
+                if (tab.onPress) { tab.onPress(); return; }
+                if (!isSelected && tab.route) router.push(tab.route as any);
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.iconWrap, isSelected && styles.iconWrapSelected]}>
+                {tab.icon(isSelected)}
+              </View>
+              <Text style={[styles.label, isSelected && styles.labelSelected, labelStyle]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </>
   );
 }
 
