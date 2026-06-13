@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ReceitaApiController;
 use App\Http\Controllers\Api\MaeInfoController;
 use App\Http\Controllers\Api\ArtigoApiController;
 use App\Http\Controllers\Api\PerfilController;
+use App\Http\Controllers\Api\AdminUsuarioController;
 
 // ─── Rotas autenticadas ───────────────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
@@ -78,4 +79,10 @@ Route::middleware('auth:sanctum')->prefix('admin/artigos')->group(function () {
     Route::post('/',           [ArtigoApiController::class, 'store']);
     Route::put('/{artigo}',    [ArtigoApiController::class, 'update']);
     Route::delete('/{artigo}', [ArtigoApiController::class, 'destroy']);
+});
+
+// ─── Admin usuários ───────────────────────────────────────────────────────────
+Route::middleware('auth:sanctum')->prefix('admin/usuarios')->group(function () {
+    Route::get('/',       [\App\Http\Controllers\Api\AdminUsuarioController::class, 'index']);
+    Route::delete('/{id}', [\App\Http\Controllers\Api\AdminUsuarioController::class, 'destroy']);
 });
