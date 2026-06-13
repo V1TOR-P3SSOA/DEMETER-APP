@@ -14,13 +14,13 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
 
-
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 // ─── Cores ────────────────────────────────────────────────────────────────────
-const ROSA      = "#b5405a";
+const ROSA       = "#b5405a";
 const ROSA_CLARO = "#fce8ed";
 const ROSA_CARD  = "#fdf0f3";
+const ROSA_BORDA = "#e8b0be";
 const SUAVE      = "#9a7080";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -45,7 +45,7 @@ type CadastroRecente = {
 };
 
 type CadastroSemana = {
-  semana: string; // "13/04"
+  semana: string;
   total: number;
 };
 
@@ -59,37 +59,29 @@ async function apiFetch(path: string) {
   return res.json();
 }
 
-// ─── Helper: formata tempo relativo ───────────────────────────────────────────
+// ─── Helper: tempo relativo ───────────────────────────────────────────────────
 function tempoRelativo(dateStr: string): string {
-  const agora = new Date();
-  const data = new Date(dateStr);
-  const diffMs = agora.getTime() - data.getTime();
-  const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffDias = Math.floor(
+    (new Date().getTime() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24)
+  );
   if (diffDias === 0) return "hoje";
   if (diffDias === 1) return "há 1 dia";
   if (diffDias < 7) return `há ${diffDias} dias`;
-  const diffSemanas = Math.floor(diffDias / 7);
-  if (diffSemanas === 1) return "há 1 semana";
-  return `há ${diffSemanas} semanas`;
+  const s = Math.floor(diffDias / 7);
+  return s === 1 ? "há 1 semana" : `há ${s} semanas`;
 }
 
-// ─── Gráfico de barras simples ────────────────────────────────────────────────
+// ─── Gráfico de barras ────────────────────────────────────────────────────────
 function Grafico({ dados }: { dados: CadastroSemana[] }) {
   const maxVal = Math.max(...dados.map((d) => d.total), 1);
   const ALTURA_MAX = 80;
-
   return (
     <View style={grafico.wrap}>
       {dados.map((item, i) => (
         <View key={i} style={grafico.coluna}>
           <Text style={grafico.valor}>{item.total}</Text>
           <View style={grafico.barraWrap}>
-            <View
-              style={[
-                grafico.barra,
-                { height: Math.max(8, (item.total / maxVal) * ALTURA_MAX) },
-              ]}
-            />
+            <View style={[grafico.barra, { height: Math.max(8, (item.total / maxVal) * ALTURA_MAX) }]} />
           </View>
           <Text style={grafico.label}>{item.semana}</Text>
         </View>
@@ -99,49 +91,23 @@ function Grafico({ dados }: { dados: CadastroSemana[] }) {
 }
 
 const grafico = StyleSheet.create({
-  wrap: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    paddingHorizontal: 4,
-    marginTop: 12,
-  },
+  wrap: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", paddingHorizontal: 4, marginTop: 12 },
   coluna: { flex: 1, alignItems: "center", gap: 4 },
   barraWrap: { height: 80, justifyContent: "flex-end" },
-  barra: {
-    width: 28,
-    backgroundColor: ROSA,
-    borderRadius: 6,
-    opacity: 0.85,
-  },
+  barra: { width: 28, backgroundColor: ROSA, borderRadius: 6, opacity: 0.85 },
   valor: { fontSize: 11, color: ROSA, fontWeight: "700" },
   label: { fontSize: 10, color: SUAVE, marginTop: 2 },
 });
 
 // ─── Card de estatística ──────────────────────────────────────────────────────
 function StatCard({
-  icone,
-  numero,
-  label,
-  detalhe1,
-  detalhe2,
-  rodape,
-  onPress,
+  icone, numero, label, detalhe1, detalhe2, rodape, onPress,
 }: {
-  icone: string;
-  numero: number;
-  label: string;
-  detalhe1?: string;
-  detalhe2?: string;
-  rodape?: string;
-  onPress?: () => void;
+  icone: string; numero: number; label: string;
+  detalhe1?: string; detalhe2?: string; rodape?: string; onPress?: () => void;
 }) {
   return (
-    <TouchableOpacity
-      style={stat.card}
-      onPress={onPress}
-      activeOpacity={onPress ? 0.8 : 1}
-    >
+    <TouchableOpacity style={stat.card} onPress={onPress} activeOpacity={onPress ? 0.8 : 1}>
       <View style={stat.topo}>
         <Text style={stat.icone}>{icone}</Text>
         <View>
@@ -165,18 +131,7 @@ function StatCard({
 }
 
 const stat = StyleSheet.create({
-  card: {
-    flex: 1,
-    backgroundColor: ROSA_CARD,
-    borderRadius: 18,
-    padding: 14,
-    gap: 8,
-    shadowColor: ROSA,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
-  },
+  card: { flex: 1, backgroundColor: ROSA_CARD, borderRadius: 18, padding: 14, gap: 8, shadowColor: ROSA, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 2 },
   topo: { flexDirection: "row", alignItems: "center", gap: 10 },
   icone: { fontSize: 22 },
   numero: { fontSize: 28, fontWeight: "700", color: ROSA, lineHeight: 32 },
@@ -187,7 +142,7 @@ const stat = StyleSheet.create({
   rodapeTexto: { fontSize: 12, color: ROSA, fontWeight: "600" },
 });
 
-// ─── Card de usuário recente ──────────────────────────────────────────────────
+// ─── Card de cadastro recente ─────────────────────────────────────────────────
 function CadastroCard({ usuario }: { usuario: CadastroRecente }) {
   return (
     <View style={user.card}>
@@ -195,9 +150,7 @@ function CadastroCard({ usuario }: { usuario: CadastroRecente }) {
         <Image source={{ uri: usuario.foto_url }} style={user.avatar} />
       ) : (
         <View style={user.avatarPlaceholder}>
-          <Text style={user.avatarLetra}>
-            {usuario.name?.charAt(0)?.toUpperCase() ?? "?"}
-          </Text>
+          <Text style={user.avatarLetra}>{usuario.name?.charAt(0)?.toUpperCase() ?? "?"}</Text>
         </View>
       )}
       <View style={user.info}>
@@ -210,24 +163,9 @@ function CadastroCard({ usuario }: { usuario: CadastroRecente }) {
 }
 
 const user = StyleSheet.create({
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: ROSA_CARD,
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 8,
-    gap: 12,
-  },
+  card: { flexDirection: "row", alignItems: "center", backgroundColor: ROSA_CARD, borderRadius: 14, padding: 12, marginBottom: 8, gap: 12 },
   avatar: { width: 46, height: 46, borderRadius: 23 },
-  avatarPlaceholder: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: ROSA,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  avatarPlaceholder: { width: 46, height: 46, borderRadius: 23, backgroundColor: ROSA, alignItems: "center", justifyContent: "center" },
   avatarLetra: { color: "#fff", fontSize: 18, fontWeight: "700" },
   info: { flex: 1 },
   nome: { fontSize: 15, fontWeight: "700", color: ROSA },
@@ -244,9 +182,7 @@ export default function AdminDashboard() {
   const [carregando, setCarregando] = useState(true);
 
   useFocusEffect(
-    useCallback(() => {
-      carregarDados();
-    }, [])
+    useCallback(() => { carregarDados(); }, [])
   );
 
   async function carregarDados() {
@@ -261,7 +197,6 @@ export default function AdminDashboard() {
       setRecentes(Array.isArray(recentesData) ? recentesData : recentesData.data ?? []);
       setSemanas(Array.isArray(semanasData) ? semanasData : semanasData.data ?? []);
     } catch {
-      // falha silenciosa — mostra zeros se API ainda não existir
       setStats({
         total_usuarios: 0, novos_essa_semana: 0, sem_questionario: 0,
         total_questionarios: 0, questionarios_preenchidos: 0, questionarios_pendentes: 0,
@@ -270,6 +205,12 @@ export default function AdminDashboard() {
     } finally {
       setCarregando(false);
     }
+  }
+
+  async function handleLogout() {
+    await AsyncStorage.removeItem("auth_token");
+    await AsyncStorage.removeItem("user_role");
+    router.replace("/login" as any);
   }
 
   if (carregando) {
@@ -286,10 +227,8 @@ export default function AdminDashboard() {
   return (
     <View style={styles.outer}>
       <StatusBar barStyle="dark-content" backgroundColor={ROSA_CLARO} />
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+
         {/* ── Header ── */}
         <View style={styles.header}>
           <View>
@@ -301,6 +240,30 @@ export default function AdminDashboard() {
             style={styles.headerLogo}
             resizeMode="contain"
           />
+        </View>
+
+        <Text style={styles.bemVinda}>"Seja bem vinda(o)!"</Text>
+
+        {/* ── Ações rápidas ── */}
+        <View style={styles.grupo}>
+          <TouchableOpacity style={styles.btnPrimario} onPress={() => router.push("/admin/create_receita" as any)}>
+            <Text style={styles.btnPrimarioText}>+ Nova Receita</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.btnPrimario} onPress={() => router.push("/admin/create_artigo" as any)}>
+            <Text style={styles.btnPrimarioText}>+ Novo Artigo</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.btnPrimario} onPress={() => router.push("/admin/usuarios" as any)}>
+            <Text style={styles.btnPrimarioText}>Usuários</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.grupo}>
+          <TouchableOpacity style={styles.btnSecundario} onPress={() => router.push("/admin/receitas" as any)}>
+            <Text style={styles.btnSecundarioText}>Gerenciar Receitas</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.btnSecundario} onPress={() => router.push("/admin/artigos" as any)}>
+            <Text style={styles.btnSecundarioText}>Gerenciar Artigos</Text>
+          </TouchableOpacity>
         </View>
 
         {/* ── Stats: Usuários + Questionários ── */}
@@ -332,7 +295,7 @@ export default function AdminDashboard() {
           detalhe2={`Publicados esse mês  ${stats?.artigos_esse_mes ?? 0}`}
         />
 
-        {/* ── Gráfico: Novos cadastros ── */}
+        {/* ── Gráfico ── */}
         {semanas.length > 0 && (
           <View style={styles.cardSecao}>
             <View style={styles.secaoHeader}>
@@ -357,6 +320,11 @@ export default function AdminDashboard() {
           </View>
         )}
 
+        {/* ── Logout ── */}
+        <TouchableOpacity style={styles.btnLogout} onPress={handleLogout}>
+          <Text style={styles.btnLogoutText}>Logout</Text>
+        </TouchableOpacity>
+
         <View style={{ height: 32 }} />
       </ScrollView>
     </View>
@@ -369,56 +337,26 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: ROSA_CLARO },
   scroll: { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 24 },
 
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
   headerSub: { fontSize: 13, color: ROSA, fontWeight: "500" },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: "700",
-    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-    color: ROSA,
-    lineHeight: 38,
-  },
-  headerLogo: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "#f8d7da",
-  },
+  headerTitle: { fontSize: 32, fontWeight: "700", fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", color: ROSA, lineHeight: 38 },
+  headerLogo: { width: 64, height: 64, borderRadius: 32, backgroundColor: "#f8d7da" },
 
-  row: { flexDirection: "row", gap: 12, marginBottom: 12 },
+  bemVinda: { fontSize: 16, color: ROSA, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", textAlign: "center", marginVertical: 20 },
 
-  cardSecao: {
-    backgroundColor: ROSA_CARD,
-    borderRadius: 18,
-    padding: 16,
-    marginTop: 12,
-    shadowColor: ROSA,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  secaoHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  secaoTitulo: {
-    fontSize: 16,
-    fontWeight: "700",
-    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-    color: ROSA,
-    flex: 1,
-  },
-  secaoBadge: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: ROSA,
-    marginLeft: 8,
-  },
+  grupo: { flexDirection: "row", gap: 10, marginBottom: 10 },
+  btnPrimario: { flex: 1, backgroundColor: ROSA, borderRadius: 14, paddingVertical: 14, alignItems: "center", shadowColor: ROSA, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 6, elevation: 2 },
+  btnPrimarioText: { color: "#fff", fontSize: 13, fontWeight: "700" },
+  btnSecundario: { flex: 1, backgroundColor: "#fff", borderRadius: 14, paddingVertical: 14, alignItems: "center", borderWidth: 1.5, borderColor: ROSA_BORDA },
+  btnSecundarioText: { color: ROSA, fontSize: 13, fontWeight: "600" },
+
+  row: { flexDirection: "row", gap: 12, marginBottom: 12, marginTop: 8 },
+
+  cardSecao: { backgroundColor: ROSA_CARD, borderRadius: 18, padding: 16, marginTop: 12, shadowColor: ROSA, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 2 },
+  secaoHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  secaoTitulo: { fontSize: 16, fontWeight: "700", fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", color: ROSA, flex: 1 },
+  secaoBadge: { fontSize: 22, fontWeight: "700", color: ROSA, marginLeft: 8 },
+
+  btnLogout: { marginTop: 20, backgroundColor: "#fff", borderRadius: 14, paddingVertical: 14, alignItems: "center", borderWidth: 1.5, borderColor: ROSA_BORDA },
+  btnLogoutText: { color: ROSA, fontSize: 14, fontWeight: "600" },
 });

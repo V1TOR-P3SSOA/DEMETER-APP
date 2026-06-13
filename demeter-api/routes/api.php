@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\MaeInfoController;
 use App\Http\Controllers\Api\ArtigoApiController;
 use App\Http\Controllers\Api\PerfilController;
 use App\Http\Controllers\Api\AdminstatsController;
+use App\Http\Controllers\Api\AdminUsuarioController;
 
 // ─── Rotas autenticadas ───────────────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
@@ -15,6 +16,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Formulário gestacional
     Route::post('/formulario', [FormularioController::class, 'store']);
     Route::get('/formulario',  [FormularioController::class, 'show']);
+    Route::patch('/formulario', [FormularioController::class, 'update']);
 
     // Perfil do usuário
     Route::get('/perfil',   [PerfilController::class, 'show']);
@@ -82,4 +84,10 @@ Route::middleware('auth:sanctum')->prefix('admin/artigos')->group(function () {
     Route::post('/',           [ArtigoApiController::class, 'store']);
     Route::put('/{artigo}',    [ArtigoApiController::class, 'update']);
     Route::delete('/{artigo}', [ArtigoApiController::class, 'destroy']);
+});
+
+// ─── Admin usuários ───────────────────────────────────────────────────────────
+Route::middleware('auth:sanctum')->prefix('admin/usuarios')->group(function () {
+    Route::get('/',       [AdminUsuarioController::class, 'index']);
+    Route::delete('/{id}', [AdminUsuarioController::class, 'destroy']);
 });

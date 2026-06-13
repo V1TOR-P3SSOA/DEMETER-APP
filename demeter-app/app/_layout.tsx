@@ -33,6 +33,7 @@ export default function RootLayout() {
         <Stack.Screen name="admin/create_artigo"  options={{ headerShown: false }} />
         <Stack.Screen name="admin/edit_artigo"    options={{ headerShown: false }} />
         <Stack.Screen name="admin/artigos"        options={{ headerShown: false }} />
+        <Stack.Screen name="admin/usuarios"        options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
