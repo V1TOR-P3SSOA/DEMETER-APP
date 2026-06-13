@@ -51,19 +51,6 @@ class AdminStatsController extends Controller
             'artigos_esse_mes'          => $artigosMes,
         ]);
     }
-
-    public function cadastrosRecentes(): JsonResponse
-    {
-        $this->onlyAdmin();
-
-        $usuarios = User::where('role', '!=', 'admin')
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get(['id', 'name', 'email', 'created_at']);
-
-        return response()->json($usuarios);
-    }
-
     public function cadastrosSemanas(): JsonResponse
     {
         $this->onlyAdmin();
