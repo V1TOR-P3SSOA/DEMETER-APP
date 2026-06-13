@@ -7,6 +7,7 @@ import {
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Svg, { Path } from "react-native-svg";
+import AdminNavbar from "../../components/Adminnavbar";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -243,72 +244,6 @@ function ReceitaCard({
   );
 }
 
-// ─── Navbar admin ─────────────────────────────────────────────────────────────
-function AdminNavbar({ current }: { current: string }) {
-  const router = useRouter();
-
-  const items = [
-    { key: "home",     label: "Início",   icon: "🏠", route: "/home" },
-    { key: "receitas", label: "Receitas", icon: "🍽️", route: "/admin/receitas" },
-    { key: "usuarios", label: "Usuários", icon: "👥", route: "/admin/usuarios" },
-    { key: "artigos",  label: "Artigos",  icon: "📄", route: "/admin/artigos" },
-    { key: "logout",   label: "Logout",   icon: "↪️", route: null },
-  ];
-
-  const handlePress = async (item: typeof items[0]) => {
-    if (item.key === "logout") {
-      await AsyncStorage.removeItem("auth_token");
-      router.replace("/login" as any);
-      return;
-    }
-    router.push(item.route as any);
-  };
-
-  return (
-    <View style={nav.wrap}>
-      {items.map((item) => {
-        const active = item.key === current;
-        return (
-          <TouchableOpacity
-            key={item.key}
-            style={nav.item}
-            onPress={() => handlePress(item)}
-            activeOpacity={0.7}
-          >
-            <View style={[nav.iconWrap, active && nav.iconWrapActive]}>
-              <Text style={nav.icon}>{item.icon}</Text>
-            </View>
-            <Text style={[nav.label, active && nav.labelActive]}>{item.label}</Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
-}
-
-const nav = StyleSheet.create({
-  wrap: {
-    flexDirection: "row",
-    backgroundColor: "#f5efe8",
-    borderRadius: 30,
-    marginHorizontal: 12,
-    marginBottom: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-    shadowColor: "#b5405a",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  item: { flex: 1, alignItems: "center", gap: 2 },
-  iconWrap: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
-  iconWrapActive: { backgroundColor: "#e8d4da" },
-  icon: { fontSize: 18 },
-  label: { fontSize: 10, color: "#9a7080", fontWeight: "500" },
-  labelActive: { color: "#b5405a", fontWeight: "700" },
-});
-
 // ─── Tela principal ───────────────────────────────────────────────────────────
 export default function AdminReceitasScreen() {
   const router = useRouter();
@@ -423,7 +358,9 @@ export default function AdminReceitasScreen() {
         }
       />
 
-      <AdminNavbar current="receitas" />
+      <View style={styles.adminnavbarWrap}>
+          <AdminNavbar current="receitas" />
+      </View>
     </View>
   );
 }
@@ -448,6 +385,13 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 20,
     paddingBottom: 20,
+  },
+
+  adminnavbarWrap: { 
+    position: "absolute", 
+    bottom: 0, 
+    left: 0, 
+    right: 0 
   },
 
   // ── Cabeçalho (igual aos artigos) ──────────────────────────────────────────

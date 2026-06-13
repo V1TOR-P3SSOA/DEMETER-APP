@@ -13,6 +13,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
+import AdminNavbar from "../../components/Adminnavbar";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -272,6 +273,11 @@ export default function AdminArtigosScreen() {
         )}
         ListEmptyComponent={<EmptyState />}
       />
+
+      <View style={styles.adminnavbarWrap}>
+          <AdminNavbar current="artigos" />
+      </View>
+
     </View>
   );
 }
@@ -354,6 +360,7 @@ const modalStyles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
   },
+  
 });
 
 // ─── Estilos gerais (iguais ao original) ─────────────────────────────────────
@@ -387,4 +394,10 @@ const styles = StyleSheet.create({
   emptyIcon: { fontSize: 52, marginBottom: 14 },
   emptyTitle: { fontSize: 20, fontWeight: "700", fontFamily: "serif", color: ROSA, marginBottom: 8, textAlign: "center" },
   emptySubtitle: { fontSize: 14, color: TEXTO, textAlign: "center", lineHeight: 20 },
+  adminnavbarWrap: { 
+    position: "absolute", 
+    bottom: 0, 
+    left: 0, 
+    right: 0 
+  },
 });

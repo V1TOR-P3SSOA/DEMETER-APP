@@ -14,6 +14,7 @@ import {
   Modal,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import AdminNavbar from "../../components/Adminnavbar";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -265,6 +266,9 @@ export default function AdminUsuariosScreen() {
         // Container externo ao redor de todos os cards
         ListFooterComponent={<View style={{ height: 8 }} />}
       />
+      <View style={styles.adminnavbarWrap}>
+              <AdminNavbar current="usuarios" />
+            </View>
     </View>
   );
 }
@@ -293,6 +297,13 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 20,
     paddingBottom: 48,
+  },
+
+  adminnavbarWrap: { 
+    position: "absolute", 
+    bottom: 0, 
+    left: 0, 
+    right: 0 
   },
 
   // ── Cabeçalho ───────────────────────────────────────────────────────────────

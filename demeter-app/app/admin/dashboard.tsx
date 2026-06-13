@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
+import AdminNavbar from "../../components/Adminnavbar";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -319,14 +320,11 @@ export default function AdminDashboard() {
             </View>
           </View>
         )}
-
-        {/* ── Logout ── */}
-        <TouchableOpacity style={styles.btnLogout} onPress={handleLogout}>
-          <Text style={styles.btnLogoutText}>Logout</Text>
-        </TouchableOpacity>
-
-        <View style={{ height: 32 }} />
       </ScrollView>
+
+      <View style={styles.adminnavbarWrap}>
+                    <AdminNavbar current="dashboard" />
+                  </View>
     </View>
   );
 }
@@ -357,6 +355,10 @@ const styles = StyleSheet.create({
   secaoTitulo: { fontSize: 16, fontWeight: "700", fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", color: ROSA, flex: 1 },
   secaoBadge: { fontSize: 22, fontWeight: "700", color: ROSA, marginLeft: 8 },
 
-  btnLogout: { marginTop: 20, backgroundColor: "#fff", borderRadius: 14, paddingVertical: 14, alignItems: "center", borderWidth: 1.5, borderColor: ROSA_BORDA },
-  btnLogoutText: { color: ROSA, fontSize: 14, fontWeight: "600" },
+  adminnavbarWrap: { 
+    position: "absolute", 
+    bottom: 0, 
+    left: 0, 
+    right: 0 
+  },
 });
