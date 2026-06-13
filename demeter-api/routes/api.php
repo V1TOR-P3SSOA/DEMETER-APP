@@ -7,7 +7,7 @@ use App\Http\Controllers\Api\ReceitaApiController;
 use App\Http\Controllers\Api\MaeInfoController;
 use App\Http\Controllers\Api\ArtigoApiController;
 use App\Http\Controllers\Api\PerfilController;
-use App\Http\Controllers\Api\AdminstatsController;
+use App\Http\Controllers\Api\AdminStatsController;
 use App\Http\Controllers\Api\AdminUsuarioController;
 
 // ─── Rotas autenticadas ───────────────────────────────────────────────────────
@@ -37,9 +37,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{receita}', [ReceitaApiController::class, 'show']);
     });
     
-    Route::get('/admin/stats',               [AdminstatsController::class, 'stats']);
-    Route::get('/admin/cadastros-recentes',  [AdminstatsController::class, 'cadastrosRecentes']);
-    Route::get('/admin/cadastros-semanas',   [AdminstatsController::class, 'cadastrosSemanas']);
+    Route::get('/admin/stats', [AdminStatsController::class, 'stats']);
+    Route::get('/admin/cadastros-recentes',[AdminStatsController::class, 'cadastrosRecentes']);
+    Route::get('/admin/cadastros-semanas',[AdminStatsController::class, 'cadastrosSemanas']);
 });
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
