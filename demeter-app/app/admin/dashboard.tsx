@@ -309,22 +309,11 @@ export default function AdminDashboard() {
           </View>
         )}
 
-        {/* ── Cadastros recentes ── */}
-        {recentes.length > 0 && (
-          <View style={styles.cardSecao}>
-            <Text style={styles.secaoTitulo}>Cadastros recentes</Text>
-            <View style={{ marginTop: 12 }}>
-              {recentes.map((u) => (
-                <CadastroCard key={u.id} usuario={u} />
-              ))}
-            </View>
-          </View>
-        )}
       </ScrollView>
 
       <View style={styles.adminnavbarWrap}>
                     <AdminNavbar current="dashboard" />
-                  </View>
+      </View>
     </View>
   );
 }
