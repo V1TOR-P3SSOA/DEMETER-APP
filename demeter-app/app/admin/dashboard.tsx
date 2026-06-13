@@ -33,6 +33,10 @@ export default function AdminScreen() {
           <TouchableOpacity style={styles.btnPrimario} onPress={() => router.push("/admin/create_artigo" as any)}>
             <Text style={styles.btnPrimarioText}>+ Novo Artigo</Text>
           </TouchableOpacity>
+
+            <TouchableOpacity style={styles.btnPrimario} onPress={() => router.push("/admin/usuarios" as any)}>
+            <Text style={styles.btnPrimarioText}>Usuarios</Text>
+          </TouchableOpacity>
           
         </View>
         <View style={styles.grupo}>
