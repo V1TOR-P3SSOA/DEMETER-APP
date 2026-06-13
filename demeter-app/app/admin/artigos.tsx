@@ -74,12 +74,7 @@ const ConfirmModal = ({ visible, onConfirm, onCancel }: ConfirmModalProps) => (
   >
     <View style={modalStyles.overlay}>
       <View style={modalStyles.box}>
-        {/* Ícone */}
-        <View style={modalStyles.iconCircle}>
-          <Text style={modalStyles.iconEmoji}>🗑️</Text>
-        </View>
 
-        {/* Textos */}
         <Text style={modalStyles.title}>Remover artigo?</Text>
         <Text style={modalStyles.subtitle}>
           Esta ação não pode ser desfeita.{"\n"}O artigo será removido permanentemente.
@@ -314,7 +309,7 @@ const modalStyles = StyleSheet.create({
     fontSize: 24,
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "700",
     fontFamily: "serif",
     color: ROSA,
@@ -322,7 +317,7 @@ const modalStyles = StyleSheet.create({
     textAlign: "center",
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 18,
     color: TEXTO,
     textAlign: "center",
     lineHeight: 20,
