@@ -14,6 +14,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Formulário gestacional
     Route::post('/formulario', [FormularioController::class, 'store']);
     Route::get('/formulario',  [FormularioController::class, 'show']);
+    Route::patch('/formulario', [FormularioController::class, 'update']);
 
     // Perfil do usuário
     Route::get('/perfil',   [PerfilController::class, 'show']);
