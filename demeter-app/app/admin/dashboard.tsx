@@ -245,28 +245,6 @@ export default function AdminDashboard() {
 
         <Text style={styles.bemVinda}>"Seja bem vinda(o)!"</Text>
 
-        {/* ── Ações rápidas ── */}
-        <View style={styles.grupo}>
-          <TouchableOpacity style={styles.btnPrimario} onPress={() => router.push("/admin/create_receita" as any)}>
-            <Text style={styles.btnPrimarioText}>+ Nova Receita</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.btnPrimario} onPress={() => router.push("/admin/create_artigo" as any)}>
-            <Text style={styles.btnPrimarioText}>+ Novo Artigo</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.btnPrimario} onPress={() => router.push("/admin/usuarios" as any)}>
-            <Text style={styles.btnPrimarioText}>Usuários</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.grupo}>
-          <TouchableOpacity style={styles.btnSecundario} onPress={() => router.push("/admin/receitas" as any)}>
-            <Text style={styles.btnSecundarioText}>Gerenciar Receitas</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.btnSecundario} onPress={() => router.push("/admin/artigos" as any)}>
-            <Text style={styles.btnSecundarioText}>Gerenciar Artigos</Text>
-          </TouchableOpacity>
-        </View>
-
         {/* ── Stats: Usuários + Questionários ── */}
         <View style={styles.row}>
           <StatCard
