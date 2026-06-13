@@ -53,7 +53,7 @@ async function fetchMaeInfo(): Promise<MaeInfo> {
 async function patchFormulario(campos: Record<string, any>): Promise<void> {
   const token = await getToken();
   const res = await fetch(`${API_URL}/api/formulario`, {
-    method: "POST",
+    method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
