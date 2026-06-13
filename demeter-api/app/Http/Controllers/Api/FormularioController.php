@@ -9,7 +9,7 @@ use Illuminate\Http\JsonResponse;
 
 class FormularioController extends Controller
 {
-    // Salva o formulário do usuário autenticado
+    // Salva o formulário do usuário autenticado (POST — cria ou substitui completo)
     public function store(Request $request): JsonResponse
     {
         $validated = $this->validate($request, [
@@ -61,14 +61,11 @@ class FormularioController extends Controller
         $validated['acompanhamento_medico'] = filter_var($validated['acompanhamento_medico'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
             ?? ($validated['acompanhamento_medico'] === 'Sim');
 
-        // Normaliza tipo_gestacao para os valores esperados pelo banco
-        // ✅ Correto — normaliza acentos também
-// Normaliza tipo_gestacao — remove acentos, espaços e coloca minúsculo
-$tipo = trim($validated['tipo_gestacao']);
-$tipo = mb_strtolower($tipo, 'UTF-8');
-$tipo = str_replace(['ú', 'u00fa'], 'u', $tipo); // remove acento do ú
-
-$validated['tipo_gestacao'] = str_contains($tipo, 'nica') ? 'unica' : 'gemelar';
+        // Normaliza tipo_gestacao — remove acentos, espaços e coloca minúsculo
+        $tipo = trim($validated['tipo_gestacao']);
+        $tipo = mb_strtolower($tipo, 'UTF-8');
+        $tipo = str_replace(['ú', 'u00fa'], 'u', $tipo);
+        $validated['tipo_gestacao'] = str_contains($tipo, 'nica') ? 'unica' : 'gemelar';
 
         $formulario = Formulario::updateOrCreate(
             ['user_id' => $request->user()->id],
@@ -76,6 +73,54 @@ $validated['tipo_gestacao'] = str_contains($tipo, 'nica') ? 'unica' : 'gemelar';
         );
 
         return response()->json($formulario, 201);
+    }
+
+    // Atualização parcial — aceita qualquer subconjunto de campos (PATCH)
+    public function update(Request $request): JsonResponse
+    {
+        $formulario = Formulario::where('user_id', $request->user()->id)->first();
+
+        if (!$formulario) {
+            return response()->json(['message' => 'Formulário não encontrado.'], 404);
+        }
+
+        $validated = $request->validate([
+            'idade'                  => 'sometimes|integer|min:10|max:55',
+            'semanas_gestacao'       => 'sometimes|integer|min:4|max:45',
+            'primeira_gestacao'      => 'sometimes',
+            'tipo_gestacao'          => 'sometimes|string',
+            'altura'                 => 'sometimes|numeric|min:100|max:250',
+            'peso'                   => 'sometimes|numeric|min:30|max:300',
+            'objetivos'              => 'sometimes|nullable|array',
+            'restricoes_alimentares' => 'sometimes|nullable|array',
+            'sintomas'               => 'sometimes|nullable|array',
+            'suplementos'            => 'sometimes|nullable|string|max:500',
+            'doencas'                => 'sometimes|nullable|string|max:500',
+            'acompanhamento_medico'  => 'sometimes|nullable',
+        ]);
+
+        // Normaliza booleanos se enviados
+        if (isset($validated['primeira_gestacao'])) {
+            $validated['primeira_gestacao'] = filter_var($validated['primeira_gestacao'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+                ?? ($validated['primeira_gestacao'] === 'Sim');
+        }
+
+        if (isset($validated['acompanhamento_medico'])) {
+            $validated['acompanhamento_medico'] = filter_var($validated['acompanhamento_medico'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+                ?? ($validated['acompanhamento_medico'] === 'Sim');
+        }
+
+        // Normaliza tipo_gestacao se enviado
+        if (isset($validated['tipo_gestacao'])) {
+            $tipo = trim($validated['tipo_gestacao']);
+            $tipo = mb_strtolower($tipo, 'UTF-8');
+            $tipo = str_replace(['ú', 'u00fa'], 'u', $tipo);
+            $validated['tipo_gestacao'] = str_contains($tipo, 'nica') ? 'unica' : 'gemelar';
+        }
+
+        $formulario->update($validated);
+
+        return response()->json($formulario);
     }
 
     // Retorna o formulário do usuário autenticado
