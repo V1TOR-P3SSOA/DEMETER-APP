@@ -38,7 +38,6 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     Route::get('/admin/stats', [AdminStatsController::class, 'stats']);
-    Route::get('/admin/cadastros-recentes',[AdminStatsController::class, 'cadastrosRecentes']);
     Route::get('/admin/cadastros-semanas',[AdminStatsController::class, 'cadastrosSemanas']);
 });
 
