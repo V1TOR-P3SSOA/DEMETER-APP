@@ -3,14 +3,13 @@ import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, ScrollView, Alert, ActivityIndicator, Image, StatusBar,
 } from "react-native";
-import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter, useFocusEffect } from "expo-router";
 // @ts-ignore
 import * as ImagePicker from "expo-image-picker";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 const SUPABASE_URL = "https://kfixoncmpzaeecxygabi.supabase.co";
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 const BUCKET = "artigos-imagens";
 
 export default function CreateArtigoScreen() {
@@ -30,51 +29,61 @@ export default function CreateArtigoScreen() {
     if (!result.canceled) setFotoUri(result.assets[0].uri);
   };
 
-  const uploadFoto = async (uri: string): Promise<string> => {
-    const filename = `artigo_${Date.now()}.jpg`;
-    const formData = new FormData();
-    formData.append("file", { uri, name: filename, type: "image/jpeg" } as any);
-    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${filename}`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${SUPABASE_ANON_KEY}`, "x-upsert": "true" },
-      body: formData,
-    });
-    if (!res.ok) { const err = await res.json(); throw new Error(err.message); }
-    return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${filename}`;
-  };
+const uploadFoto = async (uri: string): Promise<string> => {
+  const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY; // ← lê aqui, não no topo
+  if (!supabaseKey) throw new Error("Chave do Supabase não encontrada.");
 
-  const handleSalvar = async () => {
-    if (!titulo.trim() || !conteudo.trim()) {
-      Alert.alert("Atenção", "Preencha título e conteúdo.");
-      return;
+  const filename = `artigo_${Date.now()}.jpg`;
+  const formData = new FormData();
+  formData.append("file", { uri, name: filename, type: "image/jpeg" } as any);
+
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${filename}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${supabaseKey}`,
+      "x-upsert": "true",
+    },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message);
+  }
+
+  return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${filename}`;
+};
+
+const handleSalvar = async () => {
+  if (!titulo.trim() || !conteudo.trim()) {
+    Alert.alert("Atenção", "Preencha título e conteúdo.");
+    return;
+  }
+  setLoading(true);
+  try {
+    let foto_url: string | null = null;
+    if (fotoUri) foto_url = await uploadFoto(fotoUri);
+    const token = await AsyncStorage.getItem("auth_token");
+    const response = await fetch(`${API_URL}/api/admin/artigos`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ titulo, conteudo, foto_url }),
+    });
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Erro ao salvar artigo.");
     }
-    setLoading(true);
-    try {
-      let foto_url: string | null = null;
-      if (fotoUri) foto_url = await uploadFoto(fotoUri);
-      const token = await AsyncStorage.getItem("auth_token");
-      const response = await fetch(`${API_URL}/api/admin/artigos`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ titulo, conteudo, foto_url }),
-      });
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.message || "Erro ao salvar artigo.");
-      }
-      Alert.alert("Sucesso", "Artigo cadastrado com sucesso!", [
-        { text: "OK", onPress: () => router.back() },
-      ]);
-    } catch (err: any) {
-      Alert.alert("Erro", err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    router.back(); // ← redireciona direto, sem Alert
+  } catch (err: any) {
+    Alert.alert("Erro", err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <View style={styles.container}>

@@ -11,7 +11,7 @@ import {
   StatusBar,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import AdminNavbar from "../../components/Adminnavbar";
 
@@ -174,7 +174,11 @@ export default function AdminArtigosScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [artigoParaRemover, setArtigoParaRemover] = useState<number | null>(null);
 
-  useEffect(() => { fetchArtigos(); }, []);
+  useFocusEffect(
+  React.useCallback(() => {
+    fetchArtigos();
+  }, [])
+);
 
   const fetchArtigos = async () => {
     try {
