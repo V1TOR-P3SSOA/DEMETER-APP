@@ -320,13 +320,6 @@ export default function AdminDashboard() {
             </View>
           </View>
         )}
-
-        {/* ── Logout ── */}
-        <TouchableOpacity style={styles.btnLogout} onPress={handleLogout}>
-          <Text style={styles.btnLogoutText}>Logout</Text>
-        </TouchableOpacity>
-
-        <View style={{ height: 32 }} />
       </ScrollView>
 
       <View style={styles.adminnavbarWrap}>
@@ -361,9 +354,6 @@ const styles = StyleSheet.create({
   secaoHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   secaoTitulo: { fontSize: 16, fontWeight: "700", fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", color: ROSA, flex: 1 },
   secaoBadge: { fontSize: 22, fontWeight: "700", color: ROSA, marginLeft: 8 },
-
-  btnLogout: { marginTop: 20, backgroundColor: "#fff", borderRadius: 14, paddingVertical: 14, alignItems: "center", borderWidth: 1.5, borderColor: ROSA_BORDA },
-  btnLogoutText: { color: ROSA, fontSize: 14, fontWeight: "600" },
 
   adminnavbarWrap: { 
     position: "absolute", 
