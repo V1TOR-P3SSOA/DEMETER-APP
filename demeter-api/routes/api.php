@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\ReceitaApiController;
 use App\Http\Controllers\Api\MaeInfoController;
 use App\Http\Controllers\Api\ArtigoApiController;
 use App\Http\Controllers\Api\PerfilController;
+use App\Http\Controllers\Api\AdminStatsController;
+use App\Http\Controllers\Api\AdminUsuarioController;
 
 // ─── Rotas autenticadas ───────────────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
@@ -34,6 +36,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/tags',      [ReceitaApiController::class, 'tags']);
         Route::get('/{receita}', [ReceitaApiController::class, 'show']);
     });
+    
+    Route::get('/admin/stats', [AdminStatsController::class, 'stats']);
+    Route::get('/admin/cadastros-recentes',[AdminStatsController::class, 'cadastrosRecentes']);
+    Route::get('/admin/cadastros-semanas',[AdminStatsController::class, 'cadastrosSemanas']);
 });
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
@@ -78,4 +84,10 @@ Route::middleware('auth:sanctum')->prefix('admin/artigos')->group(function () {
     Route::post('/',           [ArtigoApiController::class, 'store']);
     Route::put('/{artigo}',    [ArtigoApiController::class, 'update']);
     Route::delete('/{artigo}', [ArtigoApiController::class, 'destroy']);
+});
+
+// ─── Admin usuários ───────────────────────────────────────────────────────────
+Route::middleware('auth:sanctum')->prefix('admin/usuarios')->group(function () {
+    Route::get('/',       [AdminUsuarioController::class, 'index']);
+    Route::delete('/{id}', [AdminUsuarioController::class, 'destroy']);
 });
