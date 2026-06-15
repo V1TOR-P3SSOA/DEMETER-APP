@@ -2,14 +2,15 @@
 import React, { useCallback, useState, useRef } from "react";
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Alert, StatusBar, Platform, Image,
+  ActivityIndicator, StatusBar, Platform, Image,
   Animated, Modal, TextInput,
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
-import Svg, { Path } from "react-native-svg";
 import Navbar from "../components/Navbar";
+import AdminNavbar from "../components/Adminnavbar";
+import Svg, { Path, Circle } from "react-native-svg";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -137,6 +138,112 @@ function IconSair() {
   );
 }
 
+function IconAlerta() {
+  return (
+    <Svg width={48} height={48} viewBox="0 0 48 48" fill="none">
+      <Circle cx={24} cy={24} r={22} stroke="#e03030" strokeWidth={2.5} />
+      <Path d="M24 14V26" stroke="#e03030" strokeWidth={3} strokeLinecap="round" />
+      <Circle cx={24} cy={33} r={2} fill="#e03030" />
+    </Svg>
+  );
+}
+
+// ─── Modal de confirmação de logout ──────────────────────────────────────────
+function LogoutModal({
+  visible, onConfirm, onCancel,
+}: {
+  visible: boolean; onConfirm: () => void; onCancel: () => void;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onCancel}>
+      <View style={conf.overlay}>
+        <View style={conf.box}>
+          <View style={conf.iconWrap}><IconAlerta /></View>
+          <Text style={conf.title}>Tem certeza que{"\n"}deseja sair?</Text>
+          <TouchableOpacity style={conf.btnConfirm} onPress={onConfirm} activeOpacity={0.85}>
+            <Text style={conf.btnConfirmText}>Sair</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={conf.btnCancelar} onPress={onCancel} activeOpacity={0.85}>
+            <Text style={conf.btnCancelarText}>Cancelar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+// ─── Modal de confirmação de deletar conta ────────────────────────────────────
+function DeletarContaModal({
+  visible, onConfirm, onCancel,
+}: {
+  visible: boolean; onConfirm: () => void; onCancel: () => void;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onCancel}>
+      <View style={conf.overlay}>
+        <View style={conf.box}>
+          <View style={conf.iconWrap}><IconAlerta /></View>
+          <Text style={conf.title}>Tem certeza? Essa ação{"\n"}é irreversível!</Text>
+          <TouchableOpacity style={conf.btnConfirm} onPress={onConfirm} activeOpacity={0.85}>
+            <Text style={conf.btnConfirmText}>Deletar conta</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={conf.btnCancelar} onPress={onCancel} activeOpacity={0.85}>
+            <Text style={conf.btnCancelarText}>Cancelar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+// ─── Estilos dos modais de confirmação ───────────────────────────────────────
+const conf = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(30, 10, 15, 0.55)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+  },
+  box: {
+    backgroundColor: "#fff5f6",
+    borderRadius: 24,
+    paddingTop: 32,
+    paddingBottom: 24,
+    paddingHorizontal: 24,
+    width: "100%",
+    maxWidth: 340,
+    alignItems: "center",
+  },
+  iconWrap: { marginBottom: 20 },
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    fontFamily: "serif",
+    color: "#e03030",
+    textAlign: "center",
+    lineHeight: 30,
+    marginBottom: 28,
+  },
+  btnConfirm: {
+    width: "100%",
+    backgroundColor: "#e03030",
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  btnConfirmText: { color: "#ffffff", fontSize: 18, fontWeight: "700", fontFamily: "serif" },
+  btnCancelar: {
+    width: "100%",
+    backgroundColor: "#c0b8ba",
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  btnCancelarText: { color: "#ffffff", fontSize: 18, fontWeight: "700", fontFamily: "serif" },
+});
+
 // ─── Modal de edição de usuário ───────────────────────────────────────────────
 function EditarUsuarioModal({
   visible, usuario, onClose, onSave,
@@ -150,14 +257,14 @@ function EditarUsuarioModal({
   React.useEffect(() => { setNome(usuario.nome); setEmail(usuario.email); }, [usuario]);
 
   const handleSave = async () => {
-    if (!nome.trim() || !email.trim()) { Alert.alert("Atenção", "Preencha todos os campos."); return; }
+    if (!nome.trim() || !email.trim()) { return; }
     setLoading(true);
     try {
       const updated = await updateUsuario(nome.trim(), email.trim());
       onSave(updated);
       onClose();
     } catch (err: any) {
-      Alert.alert("Erro", err.message);
+      // handle error silently or show inline
     } finally {
       setLoading(false);
     }
@@ -225,6 +332,8 @@ export default function PerfilScreen() {
   const [uploadingFoto, setUploadingFoto] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [deletarModalVisible, setDeletarModalVisible] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -252,24 +361,17 @@ export default function PerfilScreen() {
     }
   }
 
-  const handleSair = () => {
-    Alert.alert("Sair", "Deseja sair da sua conta?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Sair", style: "destructive", onPress: async () => {
-          await logout();
-          router.replace("/login" as any);
-        },
-      },
-    ]);
+  const handleSair = () => setLogoutModalVisible(true);
+
+  const handleConfirmLogout = async () => {
+    setLogoutModalVisible(false);
+    await logout();
+    router.replace("/login" as any);
   };
 
   const handleFoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Permissão negada", "Precisamos de acesso à sua galeria.");
-      return;
-    }
+    if (status !== "granted") return;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -281,189 +383,194 @@ export default function PerfilScreen() {
     try {
       const novaUrl = await uploadFoto(result.assets[0].uri);
       if (perfil) setPerfil({ ...perfil, usuario: { ...perfil.usuario, foto_url: novaUrl } });
-    } catch (err: any) {
-      Alert.alert("Erro", err.message);
+    } catch {
+      // handle silently
     } finally {
       setUploadingFoto(false);
     }
   };
 
-  const handleDeletar = () => {
-    Alert.alert(
-      "Deletar conta",
-      "Tem certeza? Essa ação é irreversível e todos os seus dados serão perdidos.",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Deletar", style: "destructive", onPress: async () => {
-            try {
-              await deletarConta();
-              await AsyncStorage.removeItem("auth_token");
-              router.replace("/login" as any);
-            } catch (err: any) {
-              Alert.alert("Erro", err.message);
-            }
-          },
-        },
-      ]
+  const handleDeletar = () => setDeletarModalVisible(true);
+
+  const handleConfirmDeletar = async () => {
+    setDeletarModalVisible(false);
+    try {
+      await deletarConta();
+      await AsyncStorage.removeItem("auth_token");
+      router.replace("/login" as any);
+    } catch {
+      // handle silently
+    }
+  };
+
+  // ─── Conteúdo central (loading / erro / perfil) ───────────────────────────
+  // A navbar fica FORA daqui — assim ela aparece em todos os estados.
+  const renderConteudo = () => {
+    if (loading) {
+      return (
+        <View style={s.centralizador}>
+          <ActivityIndicator size="large" color="#b5405a" />
+          <Text style={s.textoCarregando}>Carregando perfil...</Text>
+        </View>
+      );
+    }
+
+    if (erro || !perfil) {
+      return (
+        <View style={s.centralizador}>
+          <Text style={s.textoErro}>{erro}</Text>
+          <TouchableOpacity style={s.btnTentar} onPress={carregarPerfil}>
+            <Text style={s.btnTentarTexto}>Tentar novamente</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    const { usuario, formulario } = perfil;
+
+    return (
+      <>
+        <LogoutModal
+          visible={logoutModalVisible}
+          onConfirm={handleConfirmLogout}
+          onCancel={() => setLogoutModalVisible(false)}
+        />
+        <DeletarContaModal
+          visible={deletarModalVisible}
+          onConfirm={handleConfirmDeletar}
+          onCancel={() => setDeletarModalVisible(false)}
+        />
+        <EditarUsuarioModal
+          visible={editModalVisible}
+          usuario={usuario}
+          onClose={() => setEditModalVisible(false)}
+          onSave={(u) => setPerfil({ ...perfil, usuario: u })}
+        />
+
+        <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+          <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }], width: "100%" }}>
+
+            {/* ── Header ── */}
+            <View style={s.header}>
+              <Image
+                source={require("../assets/images/header-bg.png")}
+                style={s.headerBg}
+                resizeMode="cover"
+              />
+              <TouchableOpacity style={s.sairBtn} onPress={handleSair} activeOpacity={0.75}>
+                <IconSair />
+                <Text style={s.sairText}>Sair</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={s.avatarWrap} onPress={handleFoto} activeOpacity={0.85}>
+                {usuario.foto_url ? (
+                  <Image source={{ uri: usuario.foto_url }} style={s.avatarImage} />
+                ) : (
+                  <View style={s.avatarPlaceholder}>
+                    <Text style={s.avatarPlaceholderIcon}>👤</Text>
+                  </View>
+                )}
+                <View style={s.uploadBadge}>
+                  {uploadingFoto
+                    ? <ActivityIndicator size="small" color={ROSA} />
+                    : (
+                      <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                        <Path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke={ROSA} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+                      </Svg>
+                    )
+                  }
+                </View>
+              </TouchableOpacity>
+
+              <Text style={s.headerNome}>{usuario.nome}</Text>
+              <Text style={s.headerEmail}>{usuario.email}</Text>
+            </View>
+
+            {/* ── Body ── */}
+            <View style={s.body}>
+              <View style={s.card}>
+                <View style={s.cardHeader}>
+                  <Text style={s.cardTitulo}>Dados da conta</Text>
+                  <TouchableOpacity onPress={() => setEditModalVisible(true)} style={s.editBtnWrap}>
+                    <IconEdit />
+                  </TouchableOpacity>
+                </View>
+                <View style={s.divisor} />
+                <InfoLinha rotulo="Nome:" valor={usuario.nome} />
+                <View style={s.divisor} />
+                <InfoLinha rotulo="E-mail:" valor={usuario.email} />
+              </View>
+
+              <View style={s.card}>
+                <View style={s.cardHeader}>
+                  <Text style={s.cardTitulo}>Dados gestacionais</Text>
+                  <TouchableOpacity onPress={() => router.push("/editar-formulario" as any)} style={s.editBtnWrap}>
+                    <IconEdit />
+                  </TouchableOpacity>
+                </View>
+                <View style={s.divisor} />
+
+                {!formulario ? (
+                  <Text style={s.semDados}>Formulário não preenchido ainda.</Text>
+                ) : (
+                  <>
+                    <InfoLinha rotulo="Idade:" valor={`${formulario.idade} anos`} />
+                    <View style={s.divisor} />
+                    <InfoLinha rotulo="Semanas de gestação:" valor={`${formulario.semanas_gestacao} semanas`} />
+                    <View style={s.divisor} />
+                    <InfoLinha rotulo="Primeira gestação:" valor={formulario.primeira_gestacao ? "Sim" : "Não"} />
+                    <View style={s.divisor} />
+                    <InfoLinha rotulo="Tipo de gestação:" valor={formulario.tipo_gestacao} />
+                    <View style={s.divisor} />
+                    <InfoLinha rotulo="Altura:" valor={`${formulario.altura} cm`} />
+                    <View style={s.divisor} />
+                    <InfoLinha rotulo="Peso:" valor={`${formulario.peso} kg`} />
+                    <View style={s.divisor} />
+
+                    <Text style={s.subTitulo}>Objetivos no app:</Text>
+                    <TagList items={formulario.objetivos} />
+                    <View style={s.divisor} />
+
+                    <Text style={s.subTitulo}>Restrições alimentares:</Text>
+                    <TagList items={formulario.restricoes_alimentares} />
+                    <View style={s.divisor} />
+
+                    <Text style={s.subTitulo}>Sintomas:</Text>
+                    <TagList items={formulario.sintomas} />
+                    <View style={s.divisor} />
+
+                    <InfoLinha rotulo="Suplementos:" valor={formulario.suplementos || "Não"} />
+                    <View style={s.divisor} />
+                    <InfoLinha rotulo="Doenças:" valor={formulario.doencas || "Não"} />
+                    <View style={s.divisor} />
+                    <InfoLinha
+                      rotulo="Acompanhamento médico:"
+                      valor={
+                        formulario.acompanhamento_medico === null ? "Não informado"
+                          : formulario.acompanhamento_medico ? "Sim" : "Não"
+                      }
+                    />
+                  </>
+                )}
+              </View>
+
+              <TouchableOpacity style={s.deletarBtn} onPress={handleDeletar} activeOpacity={0.85}>
+                <Text style={s.deletarBtnText}>💔  Deletar conta</Text>
+              </TouchableOpacity>
+
+              <View style={{ height: 110 }} />
+            </View>
+          </Animated.View>
+        </ScrollView>
+      </>
     );
   };
 
-  if (loading) {
-    return (
-      <View style={s.centralizador}>
-        <StatusBar barStyle="dark-content" backgroundColor="#f8d7da" />
-        <ActivityIndicator size="large" color="#b5405a" />
-        <Text style={s.textoCarregando}>Carregando perfil...</Text>
-      </View>
-    );
-  }
-
-  if (erro || !perfil) {
-    return (
-      <View style={s.centralizador}>
-        <StatusBar barStyle="dark-content" backgroundColor="#f8d7da" />
-        <Text style={s.textoErro}>{erro}</Text>
-        <TouchableOpacity style={s.btnTentar} onPress={carregarPerfil}>
-          <Text style={s.btnTentarTexto}>Tentar novamente</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  const { usuario, formulario } = perfil;
-
+  // ─── Layout raiz — navbar SEMPRE visível ─────────────────────────────────
   return (
     <View style={s.outer}>
       <StatusBar barStyle="light-content" backgroundColor={ROSA} />
-
-      <EditarUsuarioModal
-        visible={editModalVisible}
-        usuario={usuario}
-        onClose={() => setEditModalVisible(false)}
-        onSave={(u) => setPerfil({ ...perfil, usuario: u })}
-      />
-
-      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }], width: "100%" }}>
-
-          {/* ── Header ── */}
-          <View style={s.header}>
-            <Image
-              source={require("../assets/images/header-bg.png")}
-              style={s.headerBg}
-              resizeMode="cover"
-            />
-
-            {/* Botão sair atualizado */}
-            <TouchableOpacity style={s.sairBtn} onPress={handleSair} activeOpacity={0.75}>
-              <IconSair />
-              <Text style={s.sairText}>Sair</Text>
-            </TouchableOpacity>
-
-            {/* Avatar */}
-            <TouchableOpacity style={s.avatarWrap} onPress={handleFoto} activeOpacity={0.85}>
-              {usuario.foto_url ? (
-                <Image source={{ uri: usuario.foto_url }} style={s.avatarImage} />
-              ) : (
-                <View style={s.avatarPlaceholder}>
-                  <Text style={s.avatarPlaceholderIcon}>👤</Text>
-                </View>
-              )}
-              <View style={s.uploadBadge}>
-                {uploadingFoto
-                  ? <ActivityIndicator size="small" color={ROSA} />
-                  : (
-                    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-                      <Path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke={ROSA} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
-                    </Svg>
-                  )
-                }
-              </View>
-            </TouchableOpacity>
-
-            <Text style={s.headerNome}>{usuario.nome}</Text>
-            <Text style={s.headerEmail}>{usuario.email}</Text>
-          </View>
-
-          {/* ── Body ── */}
-          <View style={s.body}>
-
-            <View style={s.card}>
-              <View style={s.cardHeader}>
-                <Text style={s.cardTitulo}>Dados da conta</Text>
-                <TouchableOpacity onPress={() => setEditModalVisible(true)} style={s.editBtnWrap}>
-                  <IconEdit />
-                </TouchableOpacity>
-              </View>
-              <View style={s.divisor} />
-              <InfoLinha rotulo="Nome:" valor={usuario.nome} />
-              <View style={s.divisor} />
-              <InfoLinha rotulo="E-mail:" valor={usuario.email} />
-            </View>
-
-            <View style={s.card}>
-              <View style={s.cardHeader}>
-                <Text style={s.cardTitulo}>Dados gestacionais</Text>
-                <TouchableOpacity onPress={() => router.push("/editar-formulario" as any)} style={s.editBtnWrap}>
-                  <IconEdit />
-                </TouchableOpacity>
-              </View>
-              <View style={s.divisor} />
-
-              {!formulario ? (
-                <Text style={s.semDados}>Formulário não preenchido ainda.</Text>
-              ) : (
-                <>
-                  <InfoLinha rotulo="Idade:" valor={`${formulario.idade} anos`} />
-                  <View style={s.divisor} />
-                  <InfoLinha rotulo="Semanas de gestação:" valor={`${formulario.semanas_gestacao} semanas`} />
-                  <View style={s.divisor} />
-                  <InfoLinha rotulo="Primeira gestação:" valor={formulario.primeira_gestacao ? "Sim" : "Não"} />
-                  <View style={s.divisor} />
-                  <InfoLinha rotulo="Tipo de gestação:" valor={formulario.tipo_gestacao} />
-                  <View style={s.divisor} />
-                  <InfoLinha rotulo="Altura:" valor={`${formulario.altura} cm`} />
-                  <View style={s.divisor} />
-                  <InfoLinha rotulo="Peso:" valor={`${formulario.peso} kg`} />
-                  <View style={s.divisor} />
-
-                  <Text style={s.subTitulo}>Objetivos no app:</Text>
-                  <TagList items={formulario.objetivos} />
-                  <View style={s.divisor} />
-
-                  <Text style={s.subTitulo}>Restrições alimentares:</Text>
-                  <TagList items={formulario.restricoes_alimentares} />
-                  <View style={s.divisor} />
-
-                  <Text style={s.subTitulo}>Sintomas:</Text>
-                  <TagList items={formulario.sintomas} />
-                  <View style={s.divisor} />
-
-                  <InfoLinha rotulo="Suplementos:" valor={formulario.suplementos || "Não"} />
-                  <View style={s.divisor} />
-                  <InfoLinha rotulo="Doenças:" valor={formulario.doencas || "Não"} />
-                  <View style={s.divisor} />
-                  <InfoLinha
-                    rotulo="Acompanhamento médico:"
-                    valor={
-                      formulario.acompanhamento_medico === null ? "Não informado"
-                        : formulario.acompanhamento_medico ? "Sim" : "Não"
-                    }
-                  />
-                </>
-              )}
-            </View>
-
-            <TouchableOpacity style={s.deletarBtn} onPress={handleDeletar} activeOpacity={0.85}>
-              <Text style={s.deletarBtnText}>💔  Deletar conta</Text>
-            </TouchableOpacity>
-
-            <View style={{ height: 110 }} />
-          </View>
-        </Animated.View>
-      </ScrollView>
-
+      {renderConteudo()}
       <View style={s.navbarWrap}>
         <Navbar current="perfil" />
       </View>
@@ -502,7 +609,6 @@ const s = StyleSheet.create({
     opacity: 0.35,
   },
 
-  // Botão sair — maior e com SVG
   sairBtn: {
     position: "absolute",
     top: 14,
@@ -588,6 +694,7 @@ const s = StyleSheet.create({
     backgroundColor: ROSA_CLARO, borderRadius: 10,
     paddingHorizontal: 12, paddingVertical: 4,
     borderWidth: 1, borderColor: ROSA_BORDA,
+    alignSelf: "flex-start",
   },
   tagText: { fontSize: 12, color: ROSA, fontWeight: "500" },
 
