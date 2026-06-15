@@ -24,6 +24,7 @@ export default function RootLayout() {
         <Stack.Screen name="perfil"           options={{ headerShown: false }} />
         <Stack.Screen name="maeinfo"          options={{ headerShown: false }} />
         <Stack.Screen name="editar-formulario" options={{ headerShown: false }} />
+        <Stack.Screen name="artigo/[id]" options={{ headerShown: false }} />
 
         {/* Rotas de admin */}
         <Stack.Screen name="admin/dashboard"     options={{ headerShown: false }} />
