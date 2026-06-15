@@ -16,6 +16,7 @@ import {
   TextInput,
 } from "react-native";
 import Navbar from "../components/Navbar";
+import Svg, { Path, Circle, Line } from "react-native-svg";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -66,19 +67,56 @@ type Receita = {
   foto_url?: string;
 };
 
-// ─── Componentes Tag, ReceitaTags, ReceitaCard, ReceitaModal (inalterados) ───
+// ─── Ícone de lupa ───────────────────────────────────────────────────────────
+function IconLupa() {
+  return (
+    <Svg width={17} height={17} viewBox="0 0 24 24" fill="none">
+      <Circle cx={11} cy={11} r={8} stroke="#c08090" strokeWidth={2} />
+      <Path d="M21 21l-4.35-4.35" stroke="#c08090" strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+// ─── Ícone de filtro (duas linhas com círculos) ───────────────────────────────
+function IconFiltro({ ativo }: { ativo: boolean }) {
+  const cor = ativo ? "#fff" : "#b5405a";
+  return (
+    <Svg width={22} height={18} viewBox="0 0 22 18" fill="none">
+      {/* Linha de cima */}
+      <Path d="M1 3H21" stroke={cor} strokeWidth={2} strokeLinecap="round" />
+      <Circle cx={15} cy={3} r={2.5} fill={ativo ? "#fff" : "#f8d7da"} stroke={cor} strokeWidth={1.8} />
+      {/* Linha de baixo */}
+      <Path d="M1 15H21" stroke={cor} strokeWidth={2} strokeLinecap="round" />
+      <Circle cx={7} cy={15} r={2.5} fill={ativo ? "#fff" : "#f8d7da"} stroke={cor} strokeWidth={1.8} />
+    </Svg>
+  );
+}
+
+// ─── Tag ─────────────────────────────────────────────────────────────────────
 function Tag({ label, categoria }: { label: string; categoria: keyof typeof TAG_COLORS }) {
   const color = TAG_COLORS[categoria] ?? { bg: "#eee", text: "#555" };
   return (
     <View style={[tagStyle.wrap, { backgroundColor: color.bg }]}>
-      <Text style={[tagStyle.text, { color: color.text }]}>{label}</Text>
+      <Text style={[tagStyle.text, { color: color.text }]} numberOfLines={1}>{label}</Text>
     </View>
   );
 }
 
 const tagStyle = StyleSheet.create({
-  wrap: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, marginRight: 6, marginBottom: 6 },
-  text: { fontSize: 15, fontWeight: "600" },
+  wrap: {
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginRight: 6,
+    marginBottom: 6,
+    alignSelf: "flex-start",   // <- impede que expanda além do conteúdo
+    maxWidth: 180,             // <- teto de largura
+  },
+  text: {
+    fontSize: 12,
+    fontWeight: "600",
+    flexShrink: 1,             // <- encolhe se necessário
+  },
 });
 
 function ReceitaTags({ receita }: { receita: Receita }) {
@@ -232,12 +270,12 @@ function FiltrosModal({
 
 const fm = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: "#00000055", justifyContent: "flex-end" },
-  sheet: { 
-  backgroundColor: "#fdf6f0", 
-  borderTopLeftRadius: 28, 
-  borderTopRightRadius: 28, 
-  height: "90%",  // <- mude maxHeight para height
-  paddingBottom: 24 
+  sheet: {
+    backgroundColor: "#fdf6f0",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    height: "90%",
+    paddingBottom: 24,
   },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 20, borderBottomWidth: 1, borderColor: "#e8c8d0" },
   titulo: { fontSize: 20, fontWeight: "700", color: "#b5405a" },
@@ -301,6 +339,7 @@ export default function ReceitasScreen() {
   };
 
   const temFiltrosAtivos = Object.values(filtrosAtivos).some((v) => v) || !!search.trim();
+  const temFiltrosCampo  = Object.values(filtrosAtivos).some((v) => v);
 
   const openModal = (receita: Receita) => { setSelected(receita); setModalVisible(true); };
   const closeModal = () => { setModalVisible(false); setSelected(null); };
@@ -314,31 +353,42 @@ export default function ReceitasScreen() {
         <Text style={styles.headerSub}>para a sua gestação 🌿</Text>
       </View>
 
-      {/* Barra de pesquisa */}
+      {/* ── Barra de pesquisa ── */}
       <View style={styles.searchRow}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar por nome..."
-          placeholderTextColor="#a06070"
-          value={search}
-          onChangeText={setSearch}
-          onSubmitEditing={handleBuscar}
-          returnKeyType="search"
-        />
-        <TouchableOpacity style={styles.searchBtn} onPress={handleBuscar}>
-          <Text style={styles.searchBtnText}>🔍</Text>
-        </TouchableOpacity>
+        {/* Input com lupa embutida */}
+        <View style={styles.searchInputWrap}>
+          <View style={styles.searchIcon}>
+            <IconLupa />
+          </View>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Ex: Buscar por nome"
+            placeholderTextColor="#c08090"
+            value={search}
+            onChangeText={setSearch}
+            onSubmitEditing={handleBuscar}
+            returnKeyType="search"
+          />
+        </View>
+
+        {/* Botão de filtros com ícone SVG */}
         <TouchableOpacity
-          style={[styles.filterBtn, Object.values(filtrosAtivos).some((v) => v) && styles.filterBtnAtivo]}
+          style={[styles.filterBtn, temFiltrosCampo && styles.filterBtnAtivo]}
           onPress={() => setFiltrosVisible(true)}
+          activeOpacity={0.8}
         >
-          <Text style={styles.filterBtnText}>⚙️</Text>
+          <IconFiltro ativo={temFiltrosCampo} />
         </TouchableOpacity>
       </View>
 
-      {/* Chips dos filtros ativos */}
-      {Object.entries(filtrosAtivos).some(([, v]) => v) && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtrosAtivosRow}>
+      {/* ── Chips dos filtros ativos ── */}
+      {temFiltrosCampo && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filtrosAtivosRow}
+          contentContainerStyle={{ paddingRight: 16, alignItems: "center" }}
+        >
           {Object.entries(filtrosAtivos)
             .filter(([, v]) => v)
             .map(([campo, valor]) => (
@@ -351,7 +401,7 @@ export default function ReceitasScreen() {
                   fetchReceitas({ ...novos, search });
                 }}
               >
-                <Text style={styles.filtroAtivoChipText}>{valor} ✕</Text>
+                <Text style={styles.filtroAtivoChipText} numberOfLines={1}>{valor} ✕</Text>
               </TouchableOpacity>
             ))}
           <TouchableOpacity style={styles.limparTudoChip} onPress={handleLimparTudo}>
@@ -359,7 +409,8 @@ export default function ReceitasScreen() {
           </TouchableOpacity>
         </ScrollView>
       )}
-      <View style={{ flex: 1 }}>
+
+      <View style={{ flex: 1, minHeight: 0 }}>
         {loading ? (
           <ActivityIndicator size="large" color="#b5405a" style={{ marginTop: 40 }} />
         ) : receitas.length === 0 ? (
@@ -402,24 +453,74 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 32, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif", color: "#b5405a", fontWeight: "700" },
   headerSub: { fontSize: 14, color: "#a06070", marginTop: 2 },
 
-  // Barra de pesquisa
-  searchRow: { flexDirection: "row", paddingHorizontal: 16, marginBottom: 8, gap: 8 },
-  searchInput: {
-    flex: 1, backgroundColor: "#fdf6f0", borderRadius: 12, paddingHorizontal: 14,
-    paddingVertical: 10, fontSize: 14, color: "#3a1a22",
-    borderWidth: 1, borderColor: "#e8c8d0",
+  // ── Barra de pesquisa reestilizada ──
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    marginBottom: 10,
+    gap: 10,
   },
-  searchBtn: { backgroundColor: "#fdf6f0", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 1, borderColor: "#e8c8d0", justifyContent: "center" },
-  searchBtnText: { fontSize: 16 },
-  filterBtn: { backgroundColor: "#fdf6f0", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 1, borderColor: "#e8c8d0", justifyContent: "center" },
-  filterBtnAtivo: { backgroundColor: "#b5405a", borderColor: "#b5405a" },
-  filterBtnText: { fontSize: 16 },
+  searchInputWrap: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff5f7",
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "#eeccd4",
+    paddingHorizontal: 14,
+    height: 46,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: "#3a1a22",
+    paddingVertical: 0,  // remove padding vertical nativo no Android
+  },
+  filterBtn: {
+    width: 46,
+    height: 46,
+    borderRadius: 22,
+    backgroundColor: "#fff5f7",
+    borderWidth: 1,
+    borderColor: "#eeccd4",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  filterBtnAtivo: {
+    backgroundColor: "#b5405a",
+    borderColor: "#b5405a",
+  },
 
-  // Chips de filtros ativos
-  filtrosAtivosRow: { paddingHorizontal: 16, marginBottom: 8 },
-  filtroAtivoChip: { backgroundColor: "#b5405a", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, marginRight: 8 },
-  filtroAtivoChipText: { color: "#fff", fontSize: 12, fontWeight: "600" },
-  limparTudoChip: { backgroundColor: "#6b7c5c", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, marginRight: 8 },
+  // ── Chips de filtros ativos ──
+filtrosAtivosRow: { paddingHorizontal: 16, marginBottom: 8, height: 36,flexGrow: 0, flexShrink: 0 },
+  filtroAtivoChip: {
+    backgroundColor: "#b5405a",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
+    maxWidth: 160,           // evita chip gigante
+    alignSelf: "flex-start",
+  },
+  filtroAtivoChipText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+    flexShrink: 1,
+  },
+  limparTudoChip: {
+    backgroundColor: "#6b7c5c",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
+    alignSelf: "flex-start",
+  },
   limparTudoText: { color: "#fff", fontSize: 12, fontWeight: "600" },
 
   list: { paddingHorizontal: 16, paddingBottom: 110 },
@@ -427,12 +528,33 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 15, color: "#a06070" },
   limparLink: { fontSize: 14, color: "#b5405a", fontWeight: "600", textDecorationLine: "underline" },
 
-  card: { backgroundColor: "#fdf6f0", borderRadius: 16, marginBottom: 16, overflow: "hidden", borderWidth: 1, borderColor: "#e8c8d0", shadowColor: "#b5405a", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
+  card: {
+    backgroundColor: "#fdf6f0",
+    borderRadius: 16,
+    marginBottom: 16,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#e8c8d0",
+    shadowColor: "#b5405a",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
   cardImageWrap: { width: "100%", height: 160 },
   cardImage: { width: "100%", height: "100%" },
   cardImagePlaceholder: { flex: 1, backgroundColor: "#f8d7da", alignItems: "center", justifyContent: "center" },
   cardImagePlaceholderText: { fontSize: 48 },
   cardBody: { padding: 14 },
-  cardNome: { fontSize: 17, fontWeight: "700", color: "#3a1a22", marginBottom: 10, fontFamily: Platform.OS === "ios" ? "Georgia" : "serif" },
-  tagsWrap: { flexDirection: "row", flexWrap: "wrap" },
+  cardNome: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#3a1a22",
+    marginBottom: 10,
+    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+  },
+  tagsWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
 });
