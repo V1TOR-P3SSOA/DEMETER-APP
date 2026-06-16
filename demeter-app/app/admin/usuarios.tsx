@@ -234,7 +234,7 @@ export default function AdminUsuariosScreen() {
             {/* Contador */}
             <View style={styles.contadorBadge}>
               <Text style={styles.contadorText}>
-                {usuarios.length} {usuarios.length === 1 ? "usuária cadastrada" : "usuárias cadastradas"}
+                {usuarios.length} {usuarios.length === 1 ? "usuário cadastrado" : "usuários cadastrados"}
               </Text>
             </View>
           </View>
