@@ -701,13 +701,13 @@ const s = StyleSheet.create({
   semDados: { fontSize: 14, color: SUAVE, textAlign: "center", paddingVertical: 8 },
 
   deletarBtn: {
-    backgroundColor: "#e05555", borderRadius: 12,
+    backgroundColor: "#F61D19", borderRadius: 12, opacity: 0.48,
     paddingVertical: 15, alignItems: "center", marginBottom: 8,
     shadowColor: "#900",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2, shadowRadius: 6, elevation: 4,
   },
-  deletarBtnText: { color: "#fff", fontSize: 15, fontWeight: "700", letterSpacing: 0.3 },
+  deletarBtnText: { color: "#fff", fontSize: 15, fontWeight: "700", letterSpacing: 0.3, opacity: 1 },
 
   navbarWrap: { position: "absolute", bottom: 0, left: 0, right: 0 },
 });
